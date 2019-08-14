@@ -62,7 +62,10 @@ class Expertrec_Recommendation_Model_Catalogsearch_Layer extends Mage_CatalogSea
      */
     public function prepareProductCollection($collection)
     {
-        $this->setSearchEnable();        
+        $this->setSearchEnable();
+        //A log line to ensure that our search is called
+        Mage::getSingleton('expertrec_recommendation/log')->log(" Calling expertrec search function with search: ".$this->searchEnable);        
+      
 
         if(isset($this->searchEnable) && $this->searchEnable == "true")
         {

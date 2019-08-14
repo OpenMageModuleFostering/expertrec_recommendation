@@ -41,6 +41,7 @@
 	<h4 style='margin:20px auto 10px;'>Extension Version: <span style='color:red;'><?php echo (string)Mage::getConfig()->getNode('modules/Expertrec_Recommendation/version')?></span></h4>
 	<h4 style='margin:10px auto;'>Extension Build No.: <span style='color:red;'><?php echo Mage::registry('buildno'); ?></span></h4>
 	<h4 style='margin:10px auto;'>Magento Version: <span style='color:red;'><?php echo Mage::getVersion(); ?></span></h4>
+	<h4 style='margin:10px auto;'>Merchant ID: <span style='color:red;'><?php echo $this->getMerchantID(); ?></span></h4>
 	<ul class="nav nav-tabs" style="margin-top:20px;">
                   <li class="active"><a data-toggle="tab" href="#apiSection">Api</a></li>
                   <li><a data-toggle="tab" href="#feedHeader">Feed Header</a></li>
@@ -87,6 +88,7 @@
 	                          <th>Website Name</th>
 	                          <th>Store ID</th>
 	                          <th>Store Name</th>
+	                          <th>Store Language</th>
 	                          <th>Total# Products</th>
 	                          <th>Url</th>
 	                        </tr>
@@ -98,6 +100,7 @@
 	                    	    <td style="text-align:center;"><?php echo $_item['wname'] ?></td>
 	                    	    <td style="text-align:center;"><?php echo $_item['sid'] ?></td>
 	                    	    <td style="text-align:center;"><?php echo $_item['sname'] ?></td>
+	                    	    <td style="text-align:center;"><?php echo Mage::getStoreConfig('general/locale/code', $_item['sid']);  ?></td>
 	                    	    <?php if(isset($_item['pcount'])): ?>
 	                    	        <td style="text-align:center;"><?php echo $_item['pcount'] ?></td>
 	                    		<?php endif;?>
@@ -107,7 +110,13 @@
 	                    		    </td>
 	                    	    <?php endif;?>    	    
 	                    	    
-	                    	    <td><a href = "<?php echo $_item['surl'] ?>"><?php echo $_item['surl'] ?></a></td>
+	                    	    <!-- <td><a href = "<?php //echo $_item['surl'] ?>"><?php //echo $_item['surl'] ?></a></td> -->
+	                    	    <!-- form post request -->
+	                    	    <td><form method="post" action="<?php echo $_item['surl'] ?>" id="webform<?php echo $_item['sid']; ?>" name="webform<?php echo $_item['sid']; ?>">
+	                    	    	<p><?php echo $_item['surl'] ?></p>
+	                    	    	<button type="submit" id ="websubmit<?php echo $_item['sid']; ?>" name ="websubmit<?php echo $_item['sid']; ?>">submit</button>
+	                    	    </form></td>
+
 	                    	  </tr>
 							<?php endforeach; ?>
 	                    </tbody>
@@ -125,13 +134,14 @@
               	  <?php              	    
               	    $customImageUrl = $this->getCustomApiUrl()."&width=170&height=170";
 
-              	    if(isset($imageParams["imgwidth"]) && isset($imageParams["imgheight"])){
+              	    if((isset($imageParams["imgwidth"]) && $imageParams["imgwidth"] != "") 
+              	    	&& (isset($imageParams["imgheight"]) && $imageParams["imgheight"] != "")){
               	    	$customImageUrl = $this->getCustomApiUrl()."&width=".$imageParams["imgwidth"]."&height=".$imageParams["imgheight"]; 
               	    }
-              	    elseif(isset($imageParams["imgwidth"])){
+              	    elseif(isset($imageParams["imgwidth"]) && $imageParams["imgwidth"] != ""){
               	    	$customImageUrl =$this->getCustomApiUrl()."&width=".$imageParams["imgwidth"]."&height=170";
               	    }
-              	    elseif(isset($imageParams["imgheight"])){
+              	    elseif(isset($imageParams["imgheight"]) && $imageParams["imgheight"] != ""){
               	    	$customImageUrl =$this->getCustomApiUrl()."&width=170&height=".$imageParams["imgheight"];
               	    }
 
@@ -139,43 +149,99 @@
               	  
 	              <fieldset>
 	              	<legend>Example</legend>
-	              	<p><b>With Custom Image</b></p>
-	              	<p><a href="<?php echo $this->getCustomApiUrl().'&width=170&height=170' ?>">
-	              		<?php echo $customImageUrl ?>	              		
-	              	 </a></p>
-	              	<p><b>With pagination without page size(default page size is 500)</b></p>
-	              	<p><a href="<?php echo $this->getCustomApiUrl().'&ps=1&pe=2' ?>">
-	              		<?php echo  $this->getCustomApiUrl().'&ps=1&pe=2' ?></a></p>
-	              	<p><b>With pagination without page size(default page size is 500)</b></p>
-	              	<p><a href="<?php echo $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?>">
-	              		<?php echo  $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?></a></p>
+	              	<!-- form post request -->
+              		<form method="post" action="<?php echo $this->getCustomApiUrl()?>" id="custImgForm" name="custImgForm">
+		              	<p><b>With Custom Image</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getCustomApiUrl().'&width=170&height=170' ?>"><?php //echo $customImageUrl ?></a></p> -->
+		              	<p><?php echo $this->getCustomApiUrl().'&width=170&height=170' ?></p>
+		              	<input type="hidden" name="width" value="170">
+		              	<input type="hidden" name="height" value="170">
+		              	<button id="custsub" name="custsub" type="submit" name="onsubmit" value="custom">submit</button>
+	              	</form>
+
+	              	<form method="post" action="<?php echo $this->getCustomApiUrl()?>">
+		              	<p><b>With pagination without page size(default page size is 500)</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getCustomApiUrl().'&ps=1&pe=2' ?>">
+		              		<?php //echo  $this->getCustomApiUrl().'&ps=1&pe=2' ?></a></p> -->
+		              	<p><?php echo $this->getCustomApiUrl().'&ps=1&pe=2' ?></p>
+		              	<input type="hidden" name="ps" value="1">
+		              	<input type="hidden" name="pe" value="2">
+		              	<button type="submit" name="onsubmit" value="custom_nosize">submit</button>
+	                </form>
+
+	              	<form method="post" action="<?php echo $this->getCustomApiUrl()?>" id="custform1" name="custform1">
+		              	<p><b>With pagination without page size(default page size is 500)</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?>">
+		              		<?php //echo  $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?></a></p> -->
+		              	<p><?php echo $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?></p>
+		              	<input type="hidden" name="ps" value="1">
+		              	<input type="hidden" name="pe" value="2">
+		              	<input type="hidden" name="psize" value="50">
+		              	<button id="custimgsub" name="custimgsub" type="submit" name="onsubmit" value="custom_size">submit</button>
+	                </form>
+
 	              </fieldset>
 	           </div>
               <div style="margin-top:20px">
               	<fieldset>
               		<legend>Getting Popular Products Api</legend>
-              		<p><b>Without pagination</b></p>
-	              	<p><a href="<?php echo $this->getSuggestionApiUrl() ?>">
-	              		<?php echo  $this->getSuggestionApiUrl() ?></a></p>
-	              	<p><b>With pagination without page size(default page size is 500)</b></p>
-	              	<p><a href="<?php echo $this->getSuggestionApiUrl().'&ps=1&pe=2' ?>">
-	              		<?php echo  $this->getSuggestionApiUrl().'&ps=1&pe=2' ?></a></p>
-	              	<p><b>With pagination without page size(default page size is 500)</b></p>
-	              	<p><a href="<?php echo $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?>">
-	              		<?php echo  $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?></a></p>
+              		<!-- form post request -->
+              		<form method="post" action="<?php echo $this->getSuggestionApiUrl() ?>" id="sugform" name="sugform">
+	              		<p><b>Without pagination</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getSuggestionApiUrl() ?>"><?php //echo  $this->getSuggestionApiUrl() ?></a></p> -->
+		              	<p><?php echo $this->getSuggestionApiUrl() ?></p>
+		              	<button id="sugsub" name="sugsub" type="submit" name="onsubmit" value="sugg">submit</button>
+	                </form>
+
+	                <form id="sug1form" name="sug1form" method="post" action="<?php echo $this->getSuggestionApiUrl() ?>">
+		              	<p><b>With pagination without page size(default page size is 500)</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getSuggestionApiUrl().'&ps=1&pe=2' ?>"><?php //echo  $this->getSuggestionApiUrl().'&ps=1&pe=2' ?></a></p> -->
+		              	<p><?php echo $this->getSuggestionApiUrl().'&ps=1&pe=2' ?></p>
+		              	<input type="hidden" name="ps" value="1">
+		              	<input type="hidden" name="pe" value="2">
+		              	<button id="sug1sub" name="sug1sub" type="submit" name="onsubmit" value="sugg_nosize">submit</button>
+	                </form>
+
+	              	<form method="post" id="sug2form" name="sug2form" action="<?php echo $this->getSuggestionApiUrl() ?>">
+		              	<p><b>With pagination without page size(default page size is 500)</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?>"><?php //echo  $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?></a></p> -->
+		              	<p><?php echo $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?></p>
+		              	<input type="hidden" name="ps" value="1">
+		              	<input type="hidden" name="pe" value="2">
+		              	<input type="hidden" name="psize" value="50">
+		              	<button id="sug2sub" name="sug2sub" type="submit" name="onsubmit" value="sugg_size">submit</button>
+	                </form>
+
               	</fieldset>
               </div>
               <div style="margin-top:20px">
               	<fieldset>
               		<legend>Getting log & Cleaning Expertrec Directory Api's</legend>
-              		<p><b>Get Log Url</b></p>
-	              	<p><a href="<?php echo $this->getLogUrl() ?>">
-	              		<?php echo  $this->getLogUrl() ?></a></p>
-	              	<p><b>Get Cleandir Url</b></p>
-	              	<p><a href="<?php echo $this->getCleanDirUrl() ?>" target="_blank">
-	              		<?php echo  $this->getCleanDirUrl() ?></a></p>	              	
+              		<form id="logform" name="logform" method="post" action="<?php echo $this->getLogUrl() ?>">
+              			<p><b>Get Log Url</b></p>
+              			<!-- <p><a href="<?php echo $this->getLogUrl() ?>"><?php echo  $this->getLogUrl() ?></a></p> -->
+              			<p><?php echo $this->getLogUrl() ?></p>
+              			<button id="logsub" name="logsub" type="submit">submit</button>
+              		</form>
+	              	<form id="cleanform" name="cleanform" method="post" action="<?php echo $this->getCleanDirUrl() ?>" target="_blank">
+		              	<p><b>Get Cleandir Url</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getCleanDirUrl() ?>" target="_blank"><?php //echo  $this->getCleanDirUrl() ?></a></p> -->
+		              	<p><?php echo $this->getCleanDirUrl() ?></p>
+              			<button id="cleansub" name="cleansub" type="submit">submit</button>
+              		</form>	 
               	</fieldset>
              </div>
+             <!-- xml-file 
+             <div style="margin-top:20px">
+             	<fieldset>
+	        		<legend>Xml File</legend>
+	        		<form method="post" action="<?php //echo $this->getBaseUrl().'xml.php';?>" target="_blank">
+						<input type="hidden" name="secret" value="<?php //echo $this->getSecret();?>">
+						<p><?php //echo $this->getBaseUrl().'xml.php'; ?></p>
+						<button type="submit">submit</button>
+					</form>
+             	</fieldset>
+             </div>-->
 	    </div>   
 	    <!--End of API Info section-->
 

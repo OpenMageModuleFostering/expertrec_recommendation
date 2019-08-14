@@ -304,7 +304,7 @@ class Expertrec_Recommendation_Model_Observer {
 
             if(empty($endpoint) || empty($mid)){
                 Mage::getSingleton('expertrec_recommendation/log')
-                        ->log("feed endpoint or merchand id is not configured Properly");
+                        ->log("feed endpoint: ".$endpoint." or merchand id: ".$mid." is not configured Properly");
                 return '';
             }
             

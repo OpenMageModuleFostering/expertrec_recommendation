@@ -36,8 +36,11 @@ class Expertrec_Recommendation_Model_Feed_Formatter {
                     $vValue = $this->_getImage($skey,$product);
                     break;
                 case 'expert_category':
-                    $vValue = $this->_getCategories($product);
-                    break;
+                    $vValue = $this->_getCategories($product,0);
+                    break; 
+                case 'expert_category_ids':
+                    $vValue = $this->_getCategories($product,1);
+                    break;           
                 case 'expert_url':
                     //$vValue=$product->getProductUrl();
                     //changing ProductUrl from /index.php/catalog/product/view/id/539/s/racer-back-maxi-dress/ to /index.php/racer-back-maxi-dress.html
@@ -57,8 +60,16 @@ class Expertrec_Recommendation_Model_Feed_Formatter {
                     $vValue = array(1,2,3,4);
                     break;
                 default:
-                    $vValue =$product->getData($skey); 
-
+                    $attributedata = Mage::getSingleton("eav/config")->getAttribute('catalog_product', $skey)->getData();
+                    $vValue =$product->getData($skey);
+                    //For multiselect attr, need to use attrText to retrieve label value
+                    if(!empty($vValue) && array_key_exists('frontend_input',$attributedata)
+                      && (isset($attributedata['frontend_input']) && $attributedata['frontend_input'] == 'select'))
+                    {
+                        $vValue .= chr(4).$product->getAttributeText($skey);
+                        //Mage::getSingleton('expertrec_recommendation/log')->log(" The select dropdown is : ".$attributedata['frontend_input']." key is : ".$skey);
+                    }
+                    break;
             }
            
             if(empty($vValue)){
@@ -71,9 +82,13 @@ class Expertrec_Recommendation_Model_Feed_Formatter {
         return $aFeedRow;
     }
 
-    protected function _getCategories($product){
+
+    /*
+    @idstr determines if this combination is called for categories, or for category ids
+    */
+    protected function _getCategories($product,$idstr){
         $path = Mage::getSingleton('expertrec_recommendation/translator_category')
-                    ->translate($product);
+                    ->translate($product,$idstr);
         return $path;
     }
 

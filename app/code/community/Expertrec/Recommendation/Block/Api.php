@@ -4,6 +4,7 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
 
   const CONFIG_HEADERS  = 'expertrec/general/headers';
   const CONFIG_FILTERS  = 'expertrec/general/filters';
+  const MERCHANT_ID  = 'expertrec/general/mid';
   const SEARCH_LIST_ENABLE = 'search/enable';
   const SEARCH_LIST_API = 'search/api';
   const SEARCH_FACET_LIST = 'search/facets_list';
@@ -41,6 +42,14 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
   	return $baseUrl;
   }
 
+  //Fetching merchant ID
+  public function getMerchantID()
+  {
+    $mid = "";
+    $mid=Mage::getStoreConfig(self::MERCHANT_ID);
+    return $mid;
+  }
+
   //Fetching secret passed in url request parameters
   public function getSecret()
   {
@@ -73,7 +82,8 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
   //Fetching image width and height 
   public function getImageParams()
   {
-  	$imageParamsArray = array();
+    $keys = array('imgwidth', 'imgheight','thumbwidth', 'thumbwidth');
+    $imageParamsArray = array_fill_keys($keys, "");
     $imageWidth = Mage::getStoreConfig(self::IMAGE_WIDTH);
     $imageHeight = Mage::getStoreConfig(self::IMAGE_HEIGHT);
     $thumbWidth = Mage::getStoreConfig(self::THUMBNAIL_WIDTH);
@@ -326,6 +336,7 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
             'expert_smallImage',
             'expert_thumbnail',
             'expert_category',
+            'expert_category_ids',
             'expert_url',
             'final_price',
             'entity_id',
