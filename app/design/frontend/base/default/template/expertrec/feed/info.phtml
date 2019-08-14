@@ -251,7 +251,7 @@
               		<form id="logform" name="logform" method="post" action="<?php echo $logApi['surl'] ?>">
               			<p><b>Get Log Url</b></p>
               			<!-- <p><a href="<?php //echo $this->getLogUrl() ?>"><?php //echo  $this->getLogUrl() ?></a></p> -->
-              			<p><?php echo $logApi['surl'] ?></p>
+              			<p><?php echo $logApi['link'] ?></p>
               			<input type="hidden" name="secret" value="<?php echo $logApi['secret']?>">
               			<button id="logsub" name="logsub" type="submit">submit</button>
               		</form>
@@ -259,7 +259,7 @@
 	              	<form id="cleanform" name="cleanform" method="post" action="<?php echo $cleanDir['surl'] ?>" target="_blank">
 		              	<p><b>Get Cleandir Url</b></p>
 		              	<!-- <p><a href="<?php //echo $this->getCleanDirUrl() ?>" target="_blank"><?php //echo  $this->getCleanDirUrl() ?></a></p> -->
-		              	<p><?php echo $cleanDir['surl'] ?></p>
+		              	<p><?php echo $cleanDir['link'] ?></p>
 		              	<input type="hidden" name="secret" value="<?php echo $cleanDir['secret']?>">
               			<button id="cleansub" name="cleansub" type="submit">submit</button>
               		</form>	 
@@ -281,7 +281,7 @@
             	<fieldset>
 	        		<legend>Pull Feed</legend>
 	        		<?php $pullFeed = $this->pullFeed();?>
-	        		<form method="post" action="<?php echo $pullFeed['surl'];?>" target="_blank">
+	        		<form method="post" action="<?php echo $pullFeed['surl'];?>">
 						<input type="hidden" name="secret" value="<?php echo $pullFeed['secret'];?>">
 						<p><?php echo $pullFeed['link']; ?></p>
 						<button type="submit">submit</button>

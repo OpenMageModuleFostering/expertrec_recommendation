@@ -43,7 +43,7 @@ class Expertrec_Recommendation_Model_Validate {
           if(empty($storedMid)){
               $storedMid = Mage::getStoreConfig(self::CONFIG_MID);
               Mage::getSingleton('expertrec_recommendation/feed_feedconfig')
-                    ->setSecret($storedMid);
+                    ->setMerchantId($storedMid);
           }
 
           return $storedMid;

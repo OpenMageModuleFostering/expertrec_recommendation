@@ -23,10 +23,10 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const THUMBNAIL_WIDTH = 'expertrec/general/expertrec_thumbnail_width';
       const THUMBNAIL_HEIGHT = 'expertrec/general/expertrec_thumbnail_height';
       const MERCHANT_ID  = 'expertrec/general/mid';
-      const SECRET  = 'expertrec/general/secret';
+      const CONFIG_SECRET  = 'expertrec/general/secret';
 
 
-      const BUILD_NO = "1489744852";
+      const BUILD_NO = "1490312068";
       private $_password;
 
        //main function which loads the feed API
@@ -431,7 +431,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
           $result .='<fieldset>';
           $result .='<legend>Configure Filters</legend>';
-
+          $result .='<p>filter_by_visiblity -- choose from ( not_visible_individually , visible_catalog , visible_search , visible_catalog_search ).</p>';
           foreach ($filterArray as $filter) { 
               if (isset($storedFiltersArray) && in_array($filter, $storedFiltersArray)){
                   $result .= '<input type="checkbox" id="'.$filter.'" name="filter_check_list[]" value="'.$filter.'" checked>';
@@ -745,14 +745,16 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       return $result;
     }
 
+    /*
+      Set & Set mid and secret if not set
+    */
+    public function getMidSecret(){
 
-
-    public function pushFeedAction(){
-
-      $logger = Mage::getSingleton('expertrec_recommendation/log');
+      $logger = Mage::getSingleton('expertrec_recommendation/log');;
+      $feedConfig = Mage::getSingleton('expertrec_recommendation/feed_feedconfig');
 
       $mid = Mage::getStoreConfig(self::MERCHANT_ID);
-      $secret = Mage::getStoreConfig(self::SECRET);
+      $secret = Mage::getStoreConfig(self::CONFIG_SECRET);
       $website_url = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB);
       $admin_email = Mage::getStoreConfig('trans_email/ident_general/email'); //fetch sender email Admin
       $admin_name = Mage::getStoreConfig('trans_email/ident_general/name'); //fetch sender name Admin
@@ -781,13 +783,31 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                 ->saveConfig('secret',$data['secret'])         
                 ->saveConfig('mid',$data['merchantid'])
                 ->clearCache();
+          
           $logger->log("Generated new mid and secret");
         }catch (Zend_Http_Client_Exception $e) {
           $logger->log(sprintf($apiUrl ." failed to create mid&secret because HTTP error: %s", $e->getMessage()),Zend_Log::ERR);
         }
       }
+      else{
+        $data = array('merchantid' => $mid, 'secret' => $secret );
+      }
+      //set config with mid and secret
+      $storedPwd = base64_decode($secret);
+      $feedConfig->setSecret($storedPwd);
+      $storedMid = $mid;
+      $feedConfig->setMerchantId($storedMid);
 
-      //get count
+      return $data;
+
+    }
+
+    /*
+      Initial hit to backend with product count and secret
+    */
+    public function getProductCount($finalUrl,$secret){
+      $logger = Mage::getSingleton('expertrec_recommendation/log');
+      $filter = Mage::getSingleton('expertrec_recommendation/feed_feedfilter');
       $array_count = array();
       $websiteCollection = Mage::getModel('core/website')->getCollection()->load();
       // $websitecount = count($websiteCollection);
@@ -802,20 +822,21 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
             
             $storeId=$oStore->getId();
             // get all products
-            $collection = Mage::getSingleton('expertrec_recommendation/feed_feedfilter')->addBasicFilter($website,$oStore);
-
+            $collection = $filter->addBasicFilter($website,$oStore);
             $count = $collection->getSize();
 
-          $array[$storeCount] = array('wid' => $websiteId, 'sid' => $storeId, 'total_products' => $count);
-          $storeCount--;
-           
+            $array[$storeCount] = array('wid' => $websiteId, 'sid' => $storeId, 'total_products' => $count);
+            $storeCount--;
           }
+          $collection->clear();
 
         }
       }
 
+      $logger->log("product count ".print_r($array,1));
+
       // feedUrl as api to userpushfeed
-      $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
+      $feedUrl = "https://feed.expertrec.com/magento/b01eba6261ad7f174cd3a16523e86e65/";
 
       // finalurl added with merchant id
       $finalUrl = $feedUrl.''.$mid.'/';
@@ -831,53 +852,113 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           ->setPrepareRequestStatus(true)
           ->sendRequest();
 
+      $logger->log('UserFeedPush_Track: request with product count sent');
       if(!$response) {
           $logger->log('UserFeedPush_Track: request failed for total_count');
       }
+    }
 
-      // all website
-      $websiteCollection = Mage::getModel('core/website')->getCollection()->load();
-      // $websitecount = count($websiteCollection);
-      $websitecount = $websiteCollection->getSize();
-      foreach ($websiteCollection as $website){
-        $websiteId=$website->getWebsiteId();
-        foreach ($website->getGroups() as $group) {
-          // all stores
-          $stores = $group->getStores();
-          foreach ($stores as $oStore) {
-            $storeId=$oStore->getId();
-            // get all products
-            $collection = Mage::getSingleton('expertrec_recommendation/feed_feedfilter')->addBasicFilter($website,$oStore);
-            foreach ($collection as $product) {
-              // checking product instance
-              if (!isset($product) || 
-                !$product instanceof Mage_Catalog_Model_Product || 
-                !$product->hasData('entity_id')){
-                $logger->log('UserFeedPush_Track: product is not a valid type');
-                return $this;
+    /*
+      Push feed per product
+    */
+    public function pushFeedAction(){
+      $logger = Mage::getSingleton('expertrec_recommendation/log');
+
+      //Increase memory limit
+      ini_set('memory_limit', '1024M');
+      //Increase maximum execution time to 5 hours (default in magento)
+      set_time_limit(18000);
+
+      ob_end_clean();
+      //avoid apache to kill the php running
+      ignore_user_abort(true);
+      ob_start();//start buffer output
+      $logger->log("Pull Feed started in background.");
+      echo "Pull Feed started in background.";
+      //close session file on server side to avoid blocking other requests
+      session_write_close();
+      //send header to avoid the browser side to take content as gzip format
+      header("Content-Encoding: none");
+      header("Content-Length: ".ob_get_length());
+      header("Connection: close");
+      ob_end_flush();
+      flush();
+
+      $logger->log("checking for mid and secret");
+      // set&get mid and secret if mid is new_user
+      $data = $this->getMidSecret();
+      $mid = $data['merchantid'];
+      $secret = $data['secret'];
+
+      // feedUrl as api to userpushfeed
+      $feedUrl = "https://feed.expertrec.com/magento/b01eba6261ad7f174cd3a16523e86e65/";
+      // finalurl added with merchant id
+      $finalUrl = $feedUrl.''.$mid.'/';
+      $logger->log("checking for product count");
+      // calculate number of products and send
+      $this->getProductCount($finalUrl,$secret);
+
+      $filter = Mage::getSingleton('expertrec_recommendation/feed_feedfilter');
+      $formatter = Mage::getSingleton('expertrec_recommendation/feed_formatter')
+                                        ->init();
+      $feedConfig = Mage::getSingleton('expertrec_recommendation/feed_feedconfig');
+      // get headers
+      $storedHeaders = Mage::getStoreConfig(self::CONFIG_HEADERS);
+
+      $logger->log("checking for feed headers");
+      if (isset($storedHeaders)){
+        $header = explode(',', $storedHeaders);
+      }
+      else{
+        $header = array();
+      }
+      if(!empty($header)){
+        // all website
+        $websiteCollection = Mage::getModel('core/website')->getCollection()->load();
+        // $websitecount = count($websiteCollection);
+        $websitecount = $websiteCollection->getSize();
+        $logger->log("collecting total website info ");
+        foreach ($websiteCollection as $website){
+          $websiteId=$website->getWebsiteId();
+          $logger->log("collecting website info for website #".$websiteId);
+          foreach ($website->getGroups() as $group) {
+            // all stores
+            $logger->log("collecting total store info");
+            $stores = $group->getStores();
+            foreach ($stores as $oStore) {
+              $storeId=$oStore->getId();
+              $logger->log("collecting store info for store #".$storeId);
+
+              $collection=$filter->addBasicFilter($website,$oStore)
+                ->setPageSize($feedConfig->pageSize);
+
+              $pageEnd = $feedConfig->pageEnd;
+              $lastPageNumber = $collection->getLastPageNumber();
+
+              if($pageEnd != 0 && $pageEnd < $lastPageNumber){
+                $pages = $pageEnd;
               }
-              try{
-                // get headers
-                $storedHeaders = Mage::getStoreConfig(self::CONFIG_HEADERS);
-                if (isset($storedHeaders)){
-                    $header = explode(',', $storedHeaders);
-                }
-                else{
-                    $header = array();
-                }
-                if(!empty($header)){
+              else{
+                $pages = $lastPageNumber;
+              }
+              $logger->log("Total no. of pages for which we are collecting feed in this reqeust: #".$pages);
 
-                  if(empty($finalUrl)){
-                      return $this;
-                  }
-                  $resultArray = Mage::getSingleton('expertrec_recommendation/feed_formatter')
-                                        ->init()
-                                        ->prepareRow($header,$product);
+              for($currentPage = $feedConfig->pageStart; $currentPage <= $pages; $currentPage++) {
+                $logger->log("Collecting feed for page: #".$currentPage);
+                $collection->setCurPage($currentPage);
+
+              // // get all products
+              // $collection = $filter->addBasicFilter($website,$oStore);
+              $logger->log("getting collection object");
+              foreach ($collection as $product) {
+                try{
+
+                  $resultArray = $formatter->prepareRow($header,$product);
                   $resultArray['storeId'] = $storeId;
                   $resultArray['websiteId'] = $websiteId;
-                  //$logger->log("Result Array ".print_r($resultArray,1));
+                  // $logger->log("Result Array ".print_r($resultArray,1));
 
-                  // sending request
+                  //sending request
                   $response = Mage::getModel('expertrec_recommendation/api_request')
                       ->setPrepareRequestStatus(false)
                       ->setUserId('expertrec')
@@ -888,60 +969,77 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                       ->setPrepareRequestStatus(true)
                       ->sendRequest();
 
-                 // $logger->log('UserFeedPush_Track: request succeded for product with Id #'.$product->getId().' of store '.$storeId);
+                  $logger->log('UserFeedPush_Track: request succeded for product with Id #'.$product->getId().' of store '.$storeId);
                   if(!$response) {
                       $logger->log('UserFeedPush_Track: request failed for product with Id #'.$product->getId());
                   }
+              
+                }
+                catch (Exception $e) {
+                  $logger->log("UserFeedPush_Track error: ".$e->getMessage());
                 }
               }
-              catch (Exception $e) {
-                $logger->log("UserFeedPush_Track error: ".$e->getMessage());
+              $collection->clear();
               }
             }
           }
+          $websitecount--;
         }
-        $websitecount--;
-      }
-      // check for feed completion
-      if($websitecount == 0){
-        $array = array('completed' => 1, );
-        $response = Mage::getModel('expertrec_recommendation/api_request')
-          ->setPrepareRequestStatus(false)
-          ->setUserId('expertrec')
-          ->setUrl($finalUrl)
-          ->setMethod(Zend_Http_Client::GET)
-          ->setData($array)
-          ->setHeader("Content-Type",'application/json')
-          ->setPrepareRequestStatus(true)
-          ->sendRequest();
+        // check for feed completion
+        if($websitecount == 0){
+          $array = array('completed' => 1, );
+          $response = Mage::getModel('expertrec_recommendation/api_request')
+            ->setPrepareRequestStatus(false)
+            ->setUserId('expertrec')
+            ->setUrl($finalUrl)
+            ->setMethod(Zend_Http_Client::GET)
+            ->setData($array)
+            ->setHeader("Content-Type",'application/json')
+            ->setPrepareRequestStatus(true)
+            ->sendRequest();
 
-        //$logger->log('UserFeedPush_Track: request completed');
-        if(!$response) {
-          $logger->log('UserFeedPush_Track: Request not complete');
+          $logger->log('UserFeedPush_Track: request completed');
+          if(!$response) {
+            $logger->log('UserFeedPush_Track: Request not complete');
+          }
         }
+        $logger->logMemoryUsage();
+  	    // update db to 1 once feed pushed
+        Mage::helper("expertrec_recommendation")->saveConfig('expertrec_feed_push','1');
       }
-	    // update db to 1 once feed pushed
-      Mage::helper("expertrec_recommendation")->saveConfig('expertrec_feed_push','1');
     }
 
-    //upload feed by user
+    /*
+      upload feed by user
+    */
     public function feedAction(){
       $this->pushFeedAction();
       return $this->_redirectReferer();
     } 
 	
-	// pull feed from info page
+	  /*
+      pull feed from info page
+    */
     public function pullFeedAction(){
       try{
         //return array of all parameters sent
         $requestParams = Mage::app()->getRequest()->getParams();
         $Password = isset($requestParams['secret']) ? $requestParams['secret'] : '';
-        // Check password. if invalid password, it will not proceed.
-        if(!Mage::getModel('expertrec_recommendation/validate')->checkPassword($Password)){
+
+        $storedPwd = Mage::getSingleton('expertrec_recommendation/feed_feedconfig')->getSecret();
+              
+        if(empty($storedPwd)){
+          $storedPwd = base64_decode(Mage::getStoreConfig(self::CONFIG_SECRET));
+          Mage::getSingleton('expertrec_recommendation/feed_feedconfig')->setSecret($storedPwd);
+        }
+
+        if($Password == '' || $Password != $storedPwd){
             die('ERROR: The specified password is invalid.');
         }
-        $this->pushFeedAction();
-        die("Feed pulled successfully.");
+        else{
+          $this->pushFeedAction();
+          die("Feed pulled successfully.");
+        }
       }catch (Exception $e) {
           Mage::getSingleton('expertrec_recommendation/log')->log( "Not able to pull the feed: ".$e->getMessage());
       }
