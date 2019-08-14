@@ -2,7 +2,7 @@
 
 class Expertrec_Recommendation_Model_Feed_Feedconfig {
 
-    var $pageSize=500;
+    var $pageSize=50;
     var $imageWidth = 250;
     var $imageHeight = 250;
     var $generateImage=false;
@@ -72,7 +72,7 @@ class Expertrec_Recommendation_Model_Feed_Feedconfig {
         $this->pageEnd = (int)$en;
         return $this;
     }
-    public function setPageSize($size=500) {
+    public function setPageSize($size=50) {
         $this->pageSize = (int)$size;
         return $this;
     }

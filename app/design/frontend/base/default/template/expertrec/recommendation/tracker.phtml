@@ -29,9 +29,16 @@ if(typeof expertSiteConf == 'undefined' || expertSiteConf == null) {
     };
 }
 
+//Add website and store id
+window.expertrecconf = {
+        merchantId:"<?php echo Mage::getStoreConfig('expertrec/general/mid');?>",
+        webId:"<?php echo Mage::app()->getWebsite()->getId();?>",
+        storeId: "<?php echo Mage::app()->getStore()->getId(); ?>",
+        currency: "<?php echo Mage::app()->getStore()->getCurrentCurrencyCode(); ?>"};
+
 /* * * DON'T EDIT BELOW LINE * * */
 
-(function(){var domain=window.location.hostname.replace(/\./g,""),ea=document.createElement('script');ea.type='text/javascript';ea.async=true;ea.src='//d3qm5o86jyjko6.cloudfront.net/rec/expertrec_'+domain+'.js';var m=document.getElementsByTagName('script')[0];m.parentNode.insertBefore(ea,m)})();var _eaq=_eaq || [];function expertApi(){if(window.expertrec_true){var args=Array.prototype.slice.call(arguments);window.ea_apispec[args[0]](args.slice(1,args.length))}else{_eaq.push(arguments);}}
+(function(){var domain=window.location.hostname.replace(/\./g,""),ea=document.createElement('script');ea.type='text/javascript';ea.async=true;ea.src='//d3qm5o86jyjko6.cloudfront.net/magento/expertrec_'+domain+'.js';var m=document.getElementsByTagName('script')[0];m.parentNode.insertBefore(ea,m)})();var _eaq=_eaq || [];function expertApi(){if(window.expertrec_true){var args=Array.prototype.slice.call(arguments);window.ea_apispec[args[0]](args.slice(1,args.length))}else{_eaq.push(arguments);}}
 
 
 </script>

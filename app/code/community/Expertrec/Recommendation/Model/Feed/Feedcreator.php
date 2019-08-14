@@ -22,11 +22,11 @@ class Expertrec_Recommendation_Model_Feed_Feedcreator {
         try{
             $logger->log("Beginning $vFeedname export for store #".$oStore->getId()." - ".$oStore->getName());
             $logger->logMemoryUsage();
-            $logger->log("Initialising file writers...");
+            // $logger->log("Initialising file writers...");
             $this->initWriters($oStore, $vFeedname);
 
             // Prepare the csv file header
-            $logger->log("Begin preparing header rows...");
+            // $logger->log("Begin preparing header rows...");
             $logger->logMemoryUsage();
 
             //if any error occur during header writing, it will return false
@@ -35,10 +35,10 @@ class Expertrec_Recommendation_Model_Feed_Feedcreator {
             }
 
             // Initialise the formatter
-            $logger->log("Initialising Feed Formatter...");
+            // $logger->log("Initialising Feed Formatter...");
             $formatter = Mage::getSingleton('expertrec_recommendation/feed_formatter');
             $formatter->init();
-            $logger->log("Initialised Feed Formatter.");
+            // $logger->log("Initialised Feed Formatter.");
 
             $logger->logMemoryUsage();
 
@@ -64,11 +64,18 @@ class Expertrec_Recommendation_Model_Feed_Feedcreator {
                 $logger->log("Collecting feed for page: #".$currentPage);
                 $collection->setCurPage($currentPage);
                 foreach ($collection as $product) {
-                    
-                    $aRow = $formatter->prepareRow($this->_ofields,$product);
-                    
-                    //writing data row
-                    $this->_oWriter->writeDataRow($aRow);
+                    try{
+
+                        $aRow = $formatter->prepareRow($this->_ofields,$product);
+                        
+                        //writing data row
+                        $this->_oWriter->writeDataRow($aRow);
+                    }
+                    catch (Exception $e) {
+                        $logger->log("Error in feed creation for page:--".$e->getMessage());
+                        $logger->log('callstack on error in feed creation per page : '.mageDebugBacktrace(true, true, true));
+                        // continue;
+                    }
                 }
                 $collection->clear();
             }
@@ -80,6 +87,7 @@ class Expertrec_Recommendation_Model_Feed_Feedcreator {
             return true;
         }catch (Exception $e) {
             $logger->log("Error in feed creation:--".$e->getMessage());
+            $logger->log('callstack on error in feed creation : '.mageDebugBacktrace(true, true, true));
             return false;
         }
     }
@@ -104,21 +112,28 @@ class Expertrec_Recommendation_Model_Feed_Feedcreator {
             }else{
                 $header = array();
             }
-            if (isset($storedFilters)){
-                $filter = explode(',', $storedFilters);
-            }
-            else{
-                $filter = array();
-            }
 
             if(empty($header)){
                 Mage::getSingleton('expertrec_recommendation/log')->log("Headers are not selected. Go to the info page,select headers and try again.");
                 return false;
             }
 
-            $totalHeaders = array_merge($header,$filter);
+            // checking for filters
+            if(isset($storedFilters)){
+                if (empty($storedFilters)){
+                    $totalHeaders = $header;
+                }
+                else{
+                    $filter = explode(',', $storedFilters);
+                    $totalHeaders = array_merge($header,$filter);
+                }
+            }
+            else{
+                $totalHeaders = $header;
+            }
+
             //setting header fields array to this, so we can use it later
-            $this->_ofields=array_merge($header,$filter);
+            $this->_ofields = $totalHeaders;
 
             //writing header row
             $this->_oWriter->setHeader($totalHeaders)->writeHeaderRow();

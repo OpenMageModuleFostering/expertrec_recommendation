@@ -3,7 +3,7 @@
 class Expertrec_Recommendation_Helper_Filehelper extends Mage_Core_Helper_Abstract{
 
 	public function createFeedZipFile($rootPath,$zipFileName) {
-        Mage::getSingleton('expertrec_recommendation/log')->log("Feed compression initiated");
+        // Mage::getSingleton('expertrec_recommendation/log')->log("Feed compression initiated");
         
     	if(!is_dir($rootPath)){return $this;}
 

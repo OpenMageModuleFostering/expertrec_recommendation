@@ -1,23 +1,40 @@
 <?php
 
-//echo 'Running The Upgrade from 1.1.5 to 1.1.6 : '.get_class($this)."\n <br /> \n";
-Mage::log("Running The Upgrade to 1.2.1 : ".get_class($this));
+//echo 'Installing extension: '.get_class($this)."\n <br /> \n";
+// Mage::log("Installing magento : 1.2.2");
 
 $installer = $this;
-
-$host = $_SERVER['HTTP_HOST'];  
-$uri = $_SERVER['REQUEST_URI']; 
-
-
+$mage_ver = Mage::getVersion();
+$php_ver = phpversion();
+$host = $_SERVER['HTTP_HOST'];
+$uri = $_SERVER['SCRIPT_NAME'];
+// $protocol = $_SERVER['REQUEST_SCHEME'];
 $installer->startSetup();
 
 $result =array();
-//status
-$result['status'] = "Upgraded";
-//hostname 
-$result['site_host'] = $host;
+//install/upgrade status
+$result['status'] = "Installed";
+//magento version
+$result['mage_ver'] = $mage_ver;
+//expertrec version
+$result['expertrec_ver'] = '1.2.10';
+$result['php_ver'] = $php_ver;
+
+if (isset($_SERVER['HTTPS']) &&
+    ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1) ||
+    isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
+    $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
+  $protocol = 'https';
+}
+else {
+  $protocol = 'http';
+}
+
 //Subdomain
 $result['site_subdomain'] = $uri;
+//hostname 
+$result['site_protocol'] = $protocol;
+$result['site_host'] = $host;
 //selecting for site_details
 $site_data = $installer->getConnection()->fetchAll("select * from {$this->getTable('core_config_data')} where `path` like '%trans_email%'");
 //site name and email
@@ -55,11 +72,14 @@ $installer->run("
     ('default',0,'expertrec/general/mid','new_user'),
     ('default',0,'expertrec/general/secret','NTE5NTQ1Zjk4OGExYzYxOWFkOTkyN2Y3MDQ5MTQ3NTM='),
     ('default',0,'expertrec/general/log_endpoint','https://feed.expertrec.com/magento/9418bba77c3b75abd2842e93b8c52c4a'),
-    ('default',0,'expertrec/general/headers','is_in_stock,expert_image,expert_thumbnail,expert_category,expert_category_ids,final_price,entity_id,rating_summary,expert_url,created_at,image,msrp,name,price,short_description,sku,small_image,special_price,category_ids'),
+    ('default',0,'expertrec/general/headers','is_in_stock,expert_image,expert_thumbnail,expert_category,expert_category_ids,final_price,entity_id,rating_summary,expert_url,created_at,image,msrp,name,price,short_description,sku,small_image,special_price,category_ids,minimal_price'),
     ('default',0,'expertrec/general/expertrec_image_width',250),
     ('default',0,'expertrec/general/expertrec_image_height',250),
     ('default',0,'expertrec/general/expertrec_thumbnail_width',80),
-    ('default',0,'expertrec/general/expertrec_thumbnail_height',80)
+    ('default',0,'expertrec/general/expertrec_thumbnail_height',80),
+    ('default',0,'expertrec/general/expertrec_feed_push',0),
+    ('default',0,'expertrec/general/expertrec_feed_pushed_pages','0,0,0'),
+    ('default',0,'expertrec/general/filters','filter_by_stock,filter_by_status')
     ON DUPLICATE KEY UPDATE `value`=`value`;
 ");
 

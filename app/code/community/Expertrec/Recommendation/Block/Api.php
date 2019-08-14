@@ -58,24 +58,45 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
   }
   public function getLogUrl()
   {
-  	$logUrl = $this->getBaseUrl().'index.php/expertrec-feed/index/getlog?secret='.$this->getSecret();
+  	$logUrl['surl'] = $this->getBaseUrl().'index.php/expertrec-feed/index/getlog';
+    $logUrl['link'] =  $this->getBaseUrl().'index.php/expertrec-feed/index/getlog?secret='.$this->getSecret();
+    $logUrl['secret'] = $this->getSecret();
   	return $logUrl;
   }
    public function getCleanDirUrl()
-  {
-	$cleanDirUrl = $this->getBaseUrl().'index.php/expertrec-feed/index/clean?secret='.$this->getSecret();  	
-	return $cleanDirUrl;
+    {
+  	$cleanDirUrl['surl'] = $this->getBaseUrl().'index.php/expertrec-feed/index/clean';  	
+    $cleanDirUrl['link'] = $this->getBaseUrl().'index.php/expertrec-feed/index/clean?secret='.$this->getSecret();
+    $cleanDirUrl['secret'] = $this->getSecret();
+  	return $cleanDirUrl;
+  }
+  // pull feed from info page
+  public function pullFeed(){
+    $pullFeed['surl'] = $this->getBaseUrl().'index.php/expertrec-feed/api/pullFeed';
+    $pullFeed['secret'] = $this->getSecret();
+    $pullFeed['link'] = $this->getBaseUrl().'index.php/expertrec-feed/api/pullFeed?secret='.$this->getSecret();
+    return $pullFeed;
   }
 
   public function getCustomApiUrl()
   {
-  	$apiUrlWithCustomConf=$this->getBaseUrl().'index.php/expertrec-feed?secret='.$this->getSecret().'&cmd=export&wid=1&sid=1';
+    $apiUrlWithCustomConf['surl']=$this->getBaseUrl().'index.php/expertrec-feed';
+    $apiUrlWithCustomConf['link']=$this->getBaseUrl().'index.php/expertrec-feed?secret='.$this->getSecret().'&cmd=export&wid=1&sid=1';
+    $apiUrlWithCustomConf['secret']=$this->getSecret();
+    $apiUrlWithCustomConf['cmd']="export";
+    $apiUrlWithCustomConf['wid']=1;
+    $apiUrlWithCustomConf['sid']=1;
   	return $apiUrlWithCustomConf;
   }
 
   public function getSuggestionApiUrl()
   {
-    $apiUrlWithCustomConf=$this->getBaseUrl().'index.php/expertrec-feed?secret='.$this->getSecret().'&cmd=getpp&wid=1&sid=1';
+    $apiUrlWithCustomConf['surl']=$this->getBaseUrl().'index.php/expertrec-feed';
+    $apiUrlWithCustomConf['link']=$this->getBaseUrl().'index.php/expertrec-feed?secret='.$this->getSecret().'&cmd=getpp&wid=1&sid=1';
+    $apiUrlWithCustomConf['secret']=$this->getSecret();
+    $apiUrlWithCustomConf['cmd']="getpp";
+    $apiUrlWithCustomConf['wid']=1;
+    $apiUrlWithCustomConf['sid']=1;
     return $apiUrlWithCustomConf;
   }
 
@@ -129,7 +150,9 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
                 foreach ($stores as $oStore) {
                     $sid=$oStore->getId();
                     $websiteStoreRow = array();
-                    $apiUrl=Mage::app()->getStore($sid)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB).'index.php/expertrec-feed?secret='.$this->getSecret().'&cmd=export&wid='.$wid.'&sid='.$sid;
+                    $apiUrl=Mage::app()->getStore($sid)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB).'index.php/expertrec-feed';
+                    
+                    $url = Mage::app()->getStore($sid)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB).'index.php/expertrec-feed?secret='.$this->getSecret().'&cmd=export&wid='.$wid.'&sid='.$sid;
                     // Display the store-website details with feed api
                    
                     $websiteStoreRow["wid"] = $wid;
@@ -137,12 +160,22 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
                     $websiteStoreRow["sid"] = $sid;
                     $websiteStoreRow["sname"] = $oStore->getName();
                     $websiteStoreRow["surl"] = $apiUrl;
+                    $websiteStoreRow["secret"] = $this->getSecret();
+                    $websiteStoreRow["cmd"] = "export";
+                    $websiteStoreRow['link'] = $url;
                    
                     try{
                         $websiteStoreRow["pcount"] = Mage::helper('expertrec_recommendation')->getProductCount($wid,$sid);
 
                     }catch(Exception $e){
                         $websiteStoreRow["pcounterr"] = $e.getMessage();
+                    }
+                    try{
+                        $filteredCollection = $feedFilter->addBasicFilter($website,$oStore);
+                        $websiteStoreRow["fcount"] = $filteredCollection->getSize();
+
+                    }catch(Exception $e){
+                        $websiteStoreRow["fcounterr"] = $e.getMessage();
                     }
 
                     array_push($websiteStoreData,$websiteStoreRow);                    
@@ -194,8 +227,8 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
       "search_enable"=>self::SEARCH_LIST_ENABLE,
       "fetch_price"=>self::SEARCH_FETCH_PRICE,
       "convert_price"=>self::SEARCH_CONVERT_PRICE,
-      "is_ajax"=>self::SEARCH_IS_AJAX,
-      "custom_template"=>self::SEARCH_CUSTOM_TEMPLATE);
+      "is_ajax"=>self::SEARCH_IS_AJAX);
+      // "custom_template"=>self::SEARCH_CUSTOM_TEMPLATE);
 
     foreach ($chekboxArray as $cKey => $cValue)
      {      
@@ -375,7 +408,12 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
     $filterArray = array(
         	'filter_by_stock',
         	'filter_by_status',
-        	'filter_by_visiblity');
+        	// 'filter_by_visiblity'
+          'not_visible_individually',
+          'visible_catalog',
+          'visible_search',
+          'visible_catalog_search'
+          );
          
     return $filterArray;
   }

@@ -90,6 +90,7 @@
 	                          <th>Store Name</th>
 	                          <th>Store Language</th>
 	                          <th>Total# Products</th>
+	                          <th>Filtered Products</th>
 	                          <th>Url</th>
 	                        </tr>
 	                    </thead>
@@ -108,12 +109,24 @@
 	                    		    <td style="text-align:center;"><b style="color:red;">Error: </b>
 	                    		    	<?php echo $_item['pcounterr'] ?>
 	                    		    </td>
-	                    	    <?php endif;?>    	    
+	                    	    <?php endif;?> 
+	                    	    <?php if(isset($_item['fcount'])): ?>
+	                    	        <td style="text-align:center;"><?php echo $_item['fcount'] ?></td>
+	                    		<?php endif;?> 
+	                    		<?php if(isset($_item['fcounterr'])): ?>
+	                    		    <td style="text-align:center;"><b style="color:red;">Error: </b>
+	                    		    	<?php echo $_item['fcounterr'] ?>
+	                    		    </td>
+	                    	    <?php endif;?>  	    
 	                    	    
 	                    	    <!-- <td><a href = "<?php //echo $_item['surl'] ?>"><?php //echo $_item['surl'] ?></a></td> -->
 	                    	    <!-- form post request -->
 	                    	    <td><form method="post" action="<?php echo $_item['surl'] ?>" id="webform<?php echo $_item['sid']; ?>" name="webform<?php echo $_item['sid']; ?>">
-	                    	    	<p><?php echo $_item['surl'] ?></p>
+	                    	    	<p><?php echo $_item['link'] ?></p>
+	                    	    	<input type="hidden" name="secret" value="<?php echo $_item['secret']?>">
+	                    	    	<input type="hidden" name="cmd" value="<?php echo $_item['cmd']?>">
+	                    	    	<input type="hidden" name="wid" value="<?php echo $_item['wid']?>">
+	                    	    	<input type="hidden" name="sid" value="<?php echo $_item['sid']?>">
 	                    	    	<button type="submit" id ="websubmit<?php echo $_item['sid']; ?>" name ="websubmit<?php echo $_item['sid']; ?>">submit</button>
 	                    	    </form></td>
 
@@ -145,35 +158,48 @@
               	    	$customImageUrl =$this->getCustomApiUrl()."&width=170&height=".$imageParams["imgheight"];
               	    }
 
+              	    $customApi = $this->getCustomApiUrl();
               	  ?>
               	  
 	              <fieldset>
 	              	<legend>Example</legend>
 	              	<!-- form post request -->
-              		<form method="post" action="<?php echo $this->getCustomApiUrl()?>" id="custImgForm" name="custImgForm">
+              		<form method="post" action="<?php echo $customApi['surl'] ?>" id="custImgForm" name="custImgForm">
 		              	<p><b>With Custom Image</b></p>
 		              	<!-- <p><a href="<?php //echo $this->getCustomApiUrl().'&width=170&height=170' ?>"><?php //echo $customImageUrl ?></a></p> -->
-		              	<p><?php echo $this->getCustomApiUrl().'&width=170&height=170' ?></p>
+		              	<p><?php echo $customApi['link'].'&width=170&height=170' ?></p>
+		              	<input type="hidden" name="secret" value="<?php echo $customApi['secret']?>">
+            	    	<input type="hidden" name="cmd" value="<?php echo $customApi['cmd']?>">
+            	    	<input type="hidden" name="wid" value="<?php echo $customApi['wid']?>">
+            	    	<input type="hidden" name="sid" value="<?php echo $customApi['sid']?>">
 		              	<input type="hidden" name="width" value="170">
 		              	<input type="hidden" name="height" value="170">
 		              	<button id="custsub" name="custsub" type="submit" name="onsubmit" value="custom">submit</button>
 	              	</form>
 
-	              	<form method="post" action="<?php echo $this->getCustomApiUrl()?>">
+	              	<form method="post" action="<?php echo $customApi['surl'] ?>">
 		              	<p><b>With pagination without page size(default page size is 500)</b></p>
 		              	<!-- <p><a href="<?php //echo $this->getCustomApiUrl().'&ps=1&pe=2' ?>">
 		              		<?php //echo  $this->getCustomApiUrl().'&ps=1&pe=2' ?></a></p> -->
-		              	<p><?php echo $this->getCustomApiUrl().'&ps=1&pe=2' ?></p>
+		              	<p><?php echo $customApi['link'].'&ps=1&pe=2' ?></p>
+		              	<input type="hidden" name="secret" value="<?php echo $customApi['secret']?>">
+            	    	<input type="hidden" name="cmd" value="<?php echo $customApi['cmd']?>">
+            	    	<input type="hidden" name="wid" value="<?php echo $customApi['wid']?>">
+            	    	<input type="hidden" name="sid" value="<?php echo $customApi['sid']?>">
 		              	<input type="hidden" name="ps" value="1">
 		              	<input type="hidden" name="pe" value="2">
 		              	<button type="submit" name="onsubmit" value="custom_nosize">submit</button>
 	                </form>
 
-	              	<form method="post" action="<?php echo $this->getCustomApiUrl()?>" id="custform1" name="custform1">
+	              	<form method="post" action="<?php echo $customApi['surl'] ?>" id="custform1" name="custform1">
 		              	<p><b>With pagination without page size(default page size is 500)</b></p>
 		              	<!-- <p><a href="<?php //echo $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?>">
 		              		<?php //echo  $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?></a></p> -->
-		              	<p><?php echo $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?></p>
+		              	<p><?php echo $customApi['link'].'&ps=1&pe=2&psize=50' ?></p>
+		              	<input type="hidden" name="secret" value="<?php echo $customApi['secret']?>">
+            	    	<input type="hidden" name="cmd" value="<?php echo $customApi['cmd']?>">
+            	    	<input type="hidden" name="wid" value="<?php echo $customApi['wid']?>">
+            	    	<input type="hidden" name="sid" value="<?php echo $customApi['sid']?>">
 		              	<input type="hidden" name="ps" value="1">
 		              	<input type="hidden" name="pe" value="2">
 		              	<input type="hidden" name="psize" value="50">
@@ -186,26 +212,39 @@
               	<fieldset>
               		<legend>Getting Popular Products Api</legend>
               		<!-- form post request -->
-              		<form method="post" action="<?php echo $this->getSuggestionApiUrl() ?>" id="sugform" name="sugform">
+              		<?php $suggestionApi = $this->getSuggestionApiUrl();?>
+              		<form method="post" action="<?php echo $suggestionApi['surl'] ?>" id="sugform" name="sugform">
 	              		<p><b>Without pagination</b></p>
 		              	<!-- <p><a href="<?php //echo $this->getSuggestionApiUrl() ?>"><?php //echo  $this->getSuggestionApiUrl() ?></a></p> -->
-		              	<p><?php echo $this->getSuggestionApiUrl() ?></p>
+		              	<p><?php echo $suggestionApi['link'] ?></p>
+		              	<input type="hidden" name="secret" value="<?php echo $suggestionApi['secret']?>">
+            	    	<input type="hidden" name="cmd" value="<?php echo $suggestionApi['cmd']?>">
+            	    	<input type="hidden" name="wid" value="<?php echo $suggestionApi['wid']?>">
+            	    	<input type="hidden" name="sid" value="<?php echo $suggestionApi['sid']?>">
 		              	<button id="sugsub" name="sugsub" type="submit" name="onsubmit" value="sugg">submit</button>
 	                </form>
 
-	                <form id="sug1form" name="sug1form" method="post" action="<?php echo $this->getSuggestionApiUrl() ?>">
+	                <form id="sug1form" name="sug1form" method="post" action="<?php echo $suggestionApi['surl'] ?>">
 		              	<p><b>With pagination without page size(default page size is 500)</b></p>
 		              	<!-- <p><a href="<?php //echo $this->getSuggestionApiUrl().'&ps=1&pe=2' ?>"><?php //echo  $this->getSuggestionApiUrl().'&ps=1&pe=2' ?></a></p> -->
-		              	<p><?php echo $this->getSuggestionApiUrl().'&ps=1&pe=2' ?></p>
+		              	<p><?php echo $suggestionApi['link'].'&ps=1&pe=2' ?></p>
+		              	<input type="hidden" name="secret" value="<?php echo $suggestionApi['secret']?>">
+            	    	<input type="hidden" name="cmd" value="<?php echo $suggestionApi['cmd']?>">
+            	    	<input type="hidden" name="wid" value="<?php echo $suggestionApi['wid']?>">
+            	    	<input type="hidden" name="sid" value="<?php echo $suggestionApi['sid']?>">
 		              	<input type="hidden" name="ps" value="1">
 		              	<input type="hidden" name="pe" value="2">
 		              	<button id="sug1sub" name="sug1sub" type="submit" name="onsubmit" value="sugg_nosize">submit</button>
 	                </form>
 
-	              	<form method="post" id="sug2form" name="sug2form" action="<?php echo $this->getSuggestionApiUrl() ?>">
+	              	<form method="post" id="sug2form" name="sug2form" action="<?php echo $suggestionApi['surl'] ?>">
 		              	<p><b>With pagination without page size(default page size is 500)</b></p>
 		              	<!-- <p><a href="<?php //echo $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?>"><?php //echo  $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?></a></p> -->
-		              	<p><?php echo $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?></p>
+		              	<p><?php echo $suggestionApi['link'].'&ps=1&pe=2&psize=50' ?></p>
+		              	<input type="hidden" name="secret" value="<?php echo $suggestionApi['secret']?>">
+            	    	<input type="hidden" name="cmd" value="<?php echo $suggestionApi['cmd']?>">
+            	    	<input type="hidden" name="wid" value="<?php echo $suggestionApi['wid']?>">
+            	    	<input type="hidden" name="sid" value="<?php echo $suggestionApi['sid']?>">
 		              	<input type="hidden" name="ps" value="1">
 		              	<input type="hidden" name="pe" value="2">
 		              	<input type="hidden" name="psize" value="50">
@@ -217,16 +256,20 @@
               <div style="margin-top:20px">
               	<fieldset>
               		<legend>Getting log & Cleaning Expertrec Directory Api's</legend>
-              		<form id="logform" name="logform" method="post" action="<?php echo $this->getLogUrl() ?>">
+              		<?php $logApi = $this->getLogUrl();?>
+              		<form id="logform" name="logform" method="post" action="<?php echo $logApi['surl'] ?>">
               			<p><b>Get Log Url</b></p>
-              			<!-- <p><a href="<?php echo $this->getLogUrl() ?>"><?php echo  $this->getLogUrl() ?></a></p> -->
-              			<p><?php echo $this->getLogUrl() ?></p>
+              			<!-- <p><a href="<?php //echo $this->getLogUrl() ?>"><?php //echo  $this->getLogUrl() ?></a></p> -->
+              			<p><?php echo $logApi['link'] ?></p>
+              			<input type="hidden" name="secret" value="<?php echo $logApi['secret']?>">
               			<button id="logsub" name="logsub" type="submit">submit</button>
               		</form>
-	              	<form id="cleanform" name="cleanform" method="post" action="<?php echo $this->getCleanDirUrl() ?>" target="_blank">
+              		<?php $cleanDir = $this->getCleanDirUrl();?>
+	              	<form id="cleanform" name="cleanform" method="post" action="<?php echo $cleanDir['surl'] ?>" target="_blank">
 		              	<p><b>Get Cleandir Url</b></p>
 		              	<!-- <p><a href="<?php //echo $this->getCleanDirUrl() ?>" target="_blank"><?php //echo  $this->getCleanDirUrl() ?></a></p> -->
-		              	<p><?php echo $this->getCleanDirUrl() ?></p>
+		              	<p><?php echo $cleanDir['link'] ?></p>
+		              	<input type="hidden" name="secret" value="<?php echo $cleanDir['secret']?>">
               			<button id="cleansub" name="cleansub" type="submit">submit</button>
               		</form>	 
               	</fieldset>
@@ -242,6 +285,18 @@
 					</form>
              	</fieldset>
              </div>-->
+			<!-- pull feed from info page -->
+            <div style="margin-top:20px">
+            	<fieldset>
+	        		<legend>Pull Feed</legend>
+	        		<?php $pullFeed = $this->pullFeed();?>
+	        		<form method="post" action="<?php echo $pullFeed['surl'];?>">
+						<input type="hidden" name="secret" value="<?php echo $pullFeed['secret'];?>">
+						<p><?php echo $pullFeed['link']; ?></p>
+						<button type="submit">submit</button>
+					</form>
+             	</fieldset>
+            </div>
 	    </div>   
 	    <!--End of API Info section-->
 
@@ -251,7 +306,7 @@
             	<fieldset>
             		<legend>Configure Feed Headers</legend>
             		<form class="setHeadersForm"
-            		 action="<?php echo $this->getBaseUrl()."index.php/expertrec-feed/config/saveheaders?secret=".$this->getSecret() ?>"  method="post" role="form" target="_blank">
+            		 action="<?php echo $this->getBaseUrl()."index.php/expertrec-feed/config/saveheaders" ; ?>"  method="post" role="form" target="_blank">
             		 	<?php 
             		 	$storedFilters = $this->getStoredFilters();
             		 	$storedHeaders = $this->getStoredHeaders();
@@ -296,6 +351,7 @@
             			<!--Configure Filters section-->
             			<fieldset>
             				<legend>Configure Filters</legend>
+            				<p>filter_by_visiblity -- choose from ( not_visible_individually , visible_catalog , visible_search , visible_catalog_search ).</p>
             				<?php foreach ($this->getAllFilters() as $_filter): ?>	
             			      <?php if($storedFilters != null && in_array($_filter, $storedFilters)): ?>                    	  
 	                    	  	<input type="checkbox" id="<?php echo $_filter; ?>" name="filter_check_list[]" 
@@ -310,13 +366,14 @@
 
             			<!-- Submit buttons section-->
             			<div style="text-align:center;margin:10px auto;">
+            				<input type="hidden" name="secret" value="<?php echo $this->getSecret();?>">
             				<input type="button" class="btn btn-md btn-primary" id="toggleSelect" value="Select All" onClick="toggle_select()" style="padding:5px; margin: 5px;"/>
             				<input type="submit" class="btn btn-md btn-primary" name="selected_headers" value="Submit" style= "padding:5px; margin: 5px;"/>
             			</div>            			
             		</form>
             	</fieldset>
             	<!--Displaying selected headers-->
-            	<?php if(!empty($storedHeaders) &&
+            	<?php if($storedHeaders != "" &&
             	isset($storedHeaders) && count($storedHeaders) > 0): ?>
 	            	<fieldset style="margin-top:20px;">
 	            	    <legend>Selected Headers</legend>
@@ -328,8 +385,10 @@
 	            			</div>
 	            	</fieldset>
                <?php endif;?>
+
             	<!--Displaying selected filters-->
-            	<?php if(!empty(Mage::getStoreConfig('expertrec/general/filters')) &&
+            	<?php $filter = Mage::getStoreConfig('expertrec/general/filters');
+            		  if($filter != "" &&
             	      isset($storedFilters) && count($storedFilters) > 0): ?>
 	            	<fieldset style="margin-top:20px;">
 	            	    <legend>Selected Filters</legend>
@@ -350,8 +409,7 @@
             <div style="margin-top:20px">
               <fieldset>
               	<legend>Configure Feed</legend>
-              	<form class="form-horizontal" action="<?php echo $this->getBaseUrl()."index.php/expertrec-feed/config/savefeedconf?secret=".$this->getSecret(); ?>"  method="post" role="form" 
-              		target="_blank">
+              	<form class="form-horizontal" action="<?php echo $this->getBaseUrl()."index.php/expertrec-feed/config/savefeedconf" ; ?>"  method="post" role="form" target="_blank">
 
               		<!--Display URL-->
               		<?php foreach ($this->getFeedConfUrl() as $_feedUrl): ?>
@@ -390,6 +448,7 @@
 
               		<!--Defining submit button-->
               		<div style="text-align:center;margin:10px auto;">
+              			<input type="hidden" name="secret" value="<?php echo $this->getSecret() ;?>">
               			<input type="submit" class="btn btn-md btn-primary" name="feed_conf" value="Submit"
               			 style="padding:5px; "/>
               		</div>
@@ -404,7 +463,7 @@
             <div style="margin-top:20px">
             	<fieldset>
             		<legend>Configure Search</legend>
-            		<form class="form-horizontal" action="<?php echo $this->getBaseUrl()."index.php/expertrec-feed/config/savesearch?secret=".$this->getSecret() ?>"  method="post" 
+            		<form class="form-horizontal" action="<?php echo $this->getBaseUrl()."index.php/expertrec-feed/config/savesearch" ; ?>"  method="post" 
             		role="form" target="_blank">
             		    <!--Defining Search fields-->
             		    <?php foreach ($this->getSearchFields() as $_searchFields): ?>
@@ -449,6 +508,7 @@
 
 	            		<!--Defining submit button-->
 	            		<div style="text-align:center;margin:10px auto;">
+	            			<input type="hidden" name="secret" value="<?php echo $this->getSecret() ;?>">
 	            			<input type="submit" class="btn btn-md btn-primary" name="selected_search" value="Submit" style="padding:5px; "/>
 	            		</div>
             	    </form>

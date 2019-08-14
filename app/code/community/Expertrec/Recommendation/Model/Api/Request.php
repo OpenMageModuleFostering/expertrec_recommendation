@@ -98,7 +98,8 @@ class Expertrec_Recommendation_Model_Api_Request extends Varien_Object {
         $request->setUri($this->url)
             ->setHeaders($this->headers)
             ->setMethod($this->method)
-            ->setParameterGet("user",$this->userId);
+            ->setParameterGet("user",$this->userId)
+            ->setConfig(array('timeout' => 1));
 
         if($this->method == Zend_Http_Client::GET) {
             $request->setParameterGet($this->getData());

@@ -19,13 +19,13 @@ class Expertrec_Recommendation_Helper_Suggestionhelper extends Mage_Core_Helper_
                 return false;
             }
 
-            $logger->log("Beginning ".$this->_fileName." export for store #".$storeId);
+            // $logger->log("Beginning ".$this->_fileName." export for store #".$storeId);
             $logger->logMemoryUsage();
-            $logger->log("Initialising file writers...");
+            // $logger->log("Initialising file writers...");
             $this->initWriters($oStore, $this->_fileName);
 
             // Prepare the csv file header
-            $logger->log("Begin preparing header rows...");
+            // $logger->log("Begin preparing header rows...");
 
             //if any error occur during header writing, it will return false
             if(!$this->prepareHeaders()){

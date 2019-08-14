@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Expertrec_Recommendation>
-            <version>1.2.1</version>
+            <version>1.2.10</version>
         </Expertrec_Recommendation>
     </modules>
     <global>
@@ -25,8 +25,6 @@
             <expertrec_setup>
                 <setup>
                     <module>Expertrec_Recommendation</module>
-                    <class>Expertrec_Recommendation_Model_Resource_Mysql4_Setup</class>
-
                 </setup>
             </expertrec_setup>
         </resources>
@@ -85,6 +83,26 @@
                     </expertrec_recommendation_save_category>
                 </observers>
             </catalog_category_save_commit_after>
+            <!-- Hook on item view 
+            <catalog_controller_product_view>
+                <observers>
+                    <itemsviewed>
+                        <type>model</type>
+                        <class>bit_itemsviewed/observer</class>
+                        <method>saveProductVisitHistory</method>
+                    </itemsviewed>
+                </observers>
+            </catalog_controller_product_view> -->
+            <!-- Hook for adding wishlist
+            <wishlist_product_add_after>
+                <observers>
+                    <expertrec_recommendation_add_wishlist>         
+                        <type>singleton</type>
+                        <class>expertrec_recommendation/observer</class>
+                        <method>addWishlist</method>         
+                    </expertrec_recommendation_add_wishlist>
+                </observers>
+            </wishlist_product_add_after> -->
         </events>        
     </global>    
     <frontend>
@@ -133,4 +151,15 @@
             </controller_action_layout_load_before>
         </events>
     </frontend>
+	<!-- added template for admin-notification -->
+    <adminhtml>
+        <layout>
+            <updates>
+                <expertrec_recommendation>
+                    <file>expertrec/recommendation.xml</file>
+                </expertrec_recommendation>
+            </updates>
+        </layout>
+    </adminhtml>
+
 </config>

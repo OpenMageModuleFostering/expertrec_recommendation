@@ -1,0 +1,15 @@
+
+<?php 
+
+	$feed_push  = 'expertrec/general/expertrec_feed_push';
+	$pushed = Mage::getStoreConfig($feed_push);
+	if($pushed == 0): ?>
+
+<div class="notification-global">
+    <strong><?php echo $this->helper('index')->__('Expertrec : ') ?></strong>
+    <?php echo "Please Upload the Feed"?>.
+    <?php $push_feed = Mage::getBaseUrl().'expertrec-feed/api/feed';?>
+    <?php echo $this->helper('index')->__('Click here to <a href="%s">Upload Feed</a>.', $push_feed);?>
+</div>
+
+<?php endif;?>

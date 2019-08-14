@@ -15,18 +15,22 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const SEARCH_FETCH_PRICE = 'search/fetch_price';
       const SEARCH_CONVERT_PRICE = 'search/convert_price';
       const SEARCH_CUSTOM_TEMPLATE = 'search/custom_template';
-      const FEED_LOG_ENDPOINT = 'log_endpoint';
-      const FEED_UPLOAD_ENDPOINT = 'upload_endpoint';
-      const IS_UPLOAD_FEED = 'is_upload';
+      const FEED_LOG_ENDPOINT = 'expertrec/general/log_endpoint';
+      const FEED_UPLOAD_ENDPOINT = 'expertrec/general/upload_endpoint';
+      const IS_UPLOAD_FEED = 'expertrec/general/is_upload';
       const IMAGE_WIDTH = 'expertrec/general/expertrec_image_width';
       const IMAGE_HEIGHT = 'expertrec/general/expertrec_image_height';
       const THUMBNAIL_WIDTH = 'expertrec/general/expertrec_thumbnail_width';
       const THUMBNAIL_HEIGHT = 'expertrec/general/expertrec_thumbnail_height';
       const MERCHANT_ID  = 'expertrec/general/mid';
+      const CONFIG_SECRET  = 'expertrec/general/secret';
+      const PUSHED_FEED_PAGES = 'expertrec/general/expertrec_feed_pushed_pages';
 
 
-      const BUILD_NO = "1487660408";
+      const BUILD_NO = "1492435529";
       private $_password;
+      private $_websiteId = array();
+      private $_storeId = array();
 
        //main function which loads the feed API
       public function infoAction()
@@ -118,6 +122,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                           <th>Store Name</th>
                           <th>Store Language</th>
                           <th>Total# Products</th>
+                          <th>Filtered Products</th>
                           <th>Url</th>
                         </tr>
                     </thead>
@@ -136,6 +141,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                                 $stores = $group->getStores();
                                 foreach ($stores as $oStore) {
                                     $sid=$oStore->getId();
+                                    $store_url = Mage::app()->getStore($sid)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB).'index.php/expertrec-feed';
                                     $storeUrl=Mage::app()->getStore($sid)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB).'index.php/expertrec-feed?secret='.$this->_password.'&cmd=export&wid='.$wid.'&sid='.$sid;
                                     // Display the store-website details with feed api
                                     echo '<tr>';
@@ -152,10 +158,21 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                                     }catch(Exception $e){
                                         echo '<td style="text-align:center;"><b style="color:red;">Error: </b>'.$e->getMessage().'</td>';
                                     }
+                                    try{
+                                        $filteredCollection = $feedFilter->addBasicFilter($website,$oStore);
+                                        $fcount = $filteredCollection->getSize();
+                                        echo '<td style="text-align:center;">'.$fcount.'</td>';
+                                    }catch(Exception $e){
+                                         echo '<td style="text-align:center;"><b style="color:red;">Error: </b>'.$e->getMessage().'</td>';
+                                    }
                              
                                     echo '<td>
-                                    <form method="post" action="'.$storeUrl.'">
+                                    <form method="post" action="'.$store_url.'">
                                     <p>'.$storeUrl.'</p>
+                                    <input type="hidden" name="secret" value="'.$this->_password.'">
+                                    <input type="hidden" name="cmd" value="export">
+                                    <input type="hidden" name="wid" value="'.$wid.'">
+                                    <input type="hidden" name="sid" value="'.$sid.'">
                                     <button type="submit">submit</button></form></td>';
                                     echo '</tr>';
                                 }
@@ -194,28 +211,50 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                 $customImagePortion ="&width=170&height=".$imageHeight;
               }
 
+              $custom_url = $baseUrl.'index.php/expertrec-feed';
               $apiUrlWithCustomConf=$baseUrl.'index.php/expertrec-feed?secret='.$this->_password.'&cmd=export&wid=1&sid=1';
 
-              echo '<form id="custImageForm" name = "custImageForm" method="POST" action ="'.$apiUrlWithCustomConf.$customImagePortion.'">
+              echo '<form id="custImageForm" name = "custImageForm" method="POST" action ="'.$custom_url.'">
               <b>With Custom image size</b><br />';
               echo '<p>'.$apiUrlWithCustomConf.$customImagePortion.'</p>
-                 <button id="custImgSubmit" name="custImgSubmit" type="submit">Submit</button>
-                 </form>';
+                <input type="hidden" name="secret" value="'.$this->_password.'">
+                <input type="hidden" name="cmd" value="export">
+                <input type="hidden" name="wid" value="1">
+                <input type="hidden" name="sid" value="1">
+                <input type="hidden" name="width" value="170">
+                <input type="hidden" name="height" value="170">
+                <button id="custImgSubmit" name="custImgSubmit" type="submit">Submit</button>
+                </form>';
 
-              echo '<form id ="custImgForm1" name="custImgForm1" method="POST" action="'.$apiUrlWithCustomConf.'&ps=1&pe=2">
+              echo '<form id ="custImgForm1" name="custImgForm1" method="POST" action="'.$custom_url.'">
               <p><b>With pagination without page size(default page size is 500)</b><br />'; 
               echo '<p>'.$apiUrlWithCustomConf.'&ps=1&pe=2</p>
+              <input type="hidden" name="secret" value="'.$this->_password.'">
+                <input type="hidden" name="cmd" value="export">
+                <input type="hidden" name="wid" value="1">
+                <input type="hidden" name="sid" value="1">
+                <input type="hidden" name="ps" value="1">
+                    <input type="hidden" name="pe" value="2">
               <button id="custImgSubmit1" name="custImgSubmit1" type="submit">Submit</button>
                  </form>';
 
-              echo '<form id="custImgForm2" name="custImageForm2" method="POST" action="'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50">
+              echo '<form id="custImgForm2" name="custImageForm2" method="POST" action="'.$custom_url.'">
               <p><b>With pagination & page size</b><br />'; 
               echo '<p>'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50</p>
+              <input type="hidden" name="secret" value="'.$this->_password.'">
+                <input type="hidden" name="cmd" value="export">
+                <input type="hidden" name="wid" value="1">
+                <input type="hidden" name="sid" value="1">
+                <input type="hidden" name="ps" value="1">
+                    <input type="hidden" name="pe" value="2">
+                    <input type="hidden" name="psize" value="50">
               <button type="submit" id="custImgSubmit2" name="custImgSubmit2">Submit</submit></form>';
             echo '</fieldset>';
 
             echo $this->displaySuggestionApi($baseUrl);
-            echo $this->displayLogApi($baseUrl);  
+            echo $this->displayLogApi($baseUrl); 
+      // pull feed from info page
+            echo $this->displayPullFeed($baseUrl); 
 ?>
             
           </div> <!-- api section end -->
@@ -270,17 +309,21 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $result .= '<legend>Getting log & Cleaning Expertrec Directory Api\'s</legend>';
 
           $logUrl = $baseUrl.'index.php/expertrec-feed/index/getlog?secret='.$this->_password;
+          $log_url = $baseUrl.'index.php/expertrec-feed/index/getlog';
           $cleanDirUrl = $baseUrl.'index.php/expertrec-feed/index/clean?secret='.$this->_password;
+          $clean_url = $baseUrl.'index.php/expertrec-feed/index/clean';
 
-          $result .= '<form method ="POST" id="logForm" name="logForm" method="POST" action="'.$logUrl.'">
+          $result .= '<form method ="POST" id="logForm" name="logForm" method="POST" action="'.$log_url.'">
           <p><b>Log url</b><br />';
           $result .= '<p>'.$logUrl.'</p>
+          <input type="hidden" name="secret" value="'.$this->_password.'">
           <button type="submit" id="logSubmit" name="logSubmit">Submit</button></form>';
 
 
-          $result .= '<form method ="POST" id="cleanForm" name="cleanForm" method="POST" action="'.$cleanDirUrl.'">
+          $result .= '<form method ="POST" id="cleanForm" name="cleanForm" method="POST" action="'.$clean_url.'">
           <p><b>Clean directory url</b><br />';
           $result .= '<p>'.$cleanDirUrl.'</p>
+          <input type="hidden" name="secret" value="'.$this->_password.'">
           <button type="submit" id="cleanSubmit" name="cleanSubmit">Submit</button></form>';  
 
 
@@ -296,21 +339,40 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $result .= '<fieldset>';
           $result .= '<legend>Getting Popular products Api</legend>';
 
+          $suggesion_url = $baseUrl.'index.php/expertrec-feed';
+
           $apiUrlWithCustomConf=$baseUrl.'index.php/expertrec-feed?secret='.$this->_password.'&cmd=getpp&wid=1&sid=1';
 
-          $result .= '<form method="POST" action="'.$apiUrlWithCustomConf.'" name ="sug1form" id="sug1form">
+          $result .= '<form method="POST" action="'.$suggesion_url.'" name ="sug1form" id="sug1form">
           <p><b>Without pagination</b><br />'; 
           $result .= '<p>'.$apiUrlWithCustomConf.'</p>
+                <input type="hidden" name="secret" value="'.$this->_password.'">
+                <input type="hidden" name="cmd" value="export">
+                <input type="hidden" name="wid" value="1">
+                <input type="hidden" name="sid" value="1">
                       <button type="submit" name="sug1submit" id="sug1submit">Submit</button></form>';
 
-          $result .= '<form method="POST" action="'.$apiUrlWithCustomConf.'&ps=1&pe=2" name ="sug1form" id="sug1form">
+          $result .= '<form method="POST" action="'.$suggesion_url.'" name ="sug1form" id="sug1form">
           <p><b>With pagination without page size(default page size is 500)</b><br />'; 
           $result .= '<p>'.$apiUrlWithCustomConf.'&ps=1&pe=2</p>
+                <input type="hidden" name="secret" value="'.$this->_password.'">
+                <input type="hidden" name="cmd" value="export">
+                <input type="hidden" name="wid" value="1">
+                <input type="hidden" name="sid" value="1">
+                <input type="hidden" name="ps" value="1">
+                    <input type="hidden" name="pe" value="2">
           <button type="submit" name="sug1submit" id="sug1submit">Submit</button></form>';
 
-          $result .= '<form method="POST" action="'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50" name ="sug2form" id="sug2form">
+          $result .= '<form method="POST" action="'.$suggesion_url.'" name ="sug2form" id="sug2form">
           <p><b>With pagination & page size</b><br />'; 
           $result .= '<p>'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50</p>
+                <input type="hidden" name="secret" value="'.$this->_password.'">
+                <input type="hidden" name="cmd" value="export">
+                <input type="hidden" name="wid" value="1">
+                <input type="hidden" name="sid" value="1">
+                <input type="hidden" name="ps" value="1">
+                    <input type="hidden" name="pe" value="2">
+                    <input type="hidden" name="psize" value="50">
           <button type="submit" name="sug2submit" id="sug2submit">Submit</button></form>';
 
           $result .= '</fieldset>';
@@ -351,10 +413,12 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           if(isset($storedFilters)){
               $storedFiltersArray = explode(',', $storedFilters);
           }
+
+          $save_header_url =  $baseUrl."index.php/expertrec-feed/config/saveheaders";
           $result .= '<fieldset>';
           $result .= '<legend>Configure Feed Headers</legend>';
 
-          $result .=  '<form class="setHeadersForm" action="'.$saveHeaderUrl.'"  method="post" role="form" target="_blank">';
+          $result .=  '<form class="setHeadersForm" action="'.$save_header_url.'"  method="post" role="form" target="_blank">';
           
           foreach ($attributes as $attr) { 
               if (isset($storedHeadersArray) && in_array($attr, $storedHeadersArray)){
@@ -373,13 +437,12 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $result .= '<div style="display:block"><h4>Expertrec Thumbnail</h4><label for="thumbnailwidth">Thumbnail Width</label><input type="text" id="thumbnailwidth" name="thumbnailwidth" placeholder="Give thumbnail width" value="'.Mage::getStoreConfig(self::THUMBNAIL_WIDTH).'"></div>';
           $result .= '<div style="display:block"><label for="thumbnailheight">Thumbnail Height</label><input type="text" id="thumbnailheight" name="thumbnailheight" placeholder="Give thumbnail height" value="'.Mage::getStoreConfig(self::THUMBNAIL_HEIGHT).'"></div>';
 
-          $filterArray = array('filter_by_stock','filter_by_status','filter_by_visiblity');
-          
-          // filter_by_not_visible_individually','filter_by_visible_catalog','filter_by_visible_search','filter_by_visible_catalog_search'
+          // $filterArray = array('filter_by_stock','filter_by_status','filter_by_visiblity');
+          $filterArray = array('filter_by_stock','filter_by_status','not_visible_individually','visible_catalog','visible_search','visible_catalog_search');
 
           $result .='<fieldset>';
           $result .='<legend>Configure Filters</legend>';
-
+          $result .='<p>filter_by_visiblity -- choose from ( not_visible_individually , visible_catalog , visible_search , visible_catalog_search ).</p>';
           foreach ($filterArray as $filter) { 
               if (isset($storedFiltersArray) && in_array($filter, $storedFiltersArray)){
                   $result .= '<input type="checkbox" id="'.$filter.'" name="filter_check_list[]" value="'.$filter.'" checked>';
@@ -393,6 +456,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
 
           $result .= '<div style="text-align:center;margin:10px auto;"> ';
+          $result .= '<input type="hidden" name="secret" value="'.$this->_password.'">';
           $result .= '<input type="button" class="btn btn-md btn-primary" id="toggleSelect" value="Select All" onClick="toggle_select()" style="padding:5px; margin: 5px;"/>';
           $result .= '<input type="submit" class="btn btn-md btn-primary" name="selected_headers" value="Submit" style= "padding:5px; margin: 5px;"/>';
           $result .= '</div>';
@@ -436,15 +500,17 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
       private function displaySearchConf($baseUrl){
           $saveSearchUrl = $baseUrl."index.php/expertrec-feed/config/savesearch?secret=".$this->_password;
+          $save_search_url = $baseUrl."index.php/expertrec-feed/config/savesearch";
           $result = '<fieldset>';
           $result .= '<legend>Configure Search</legend>';
-          $result .= '<form class="form-horizontal" action="'.$saveSearchUrl.'"  method="post" role="form" target="_blank">';
+          $result .= '<form class="form-horizontal" action="'.$save_search_url.'"  method="post" role="form" target="_blank">';
 
           $textArray = array("api"=>"Search endpoint", "facet_list"=>"Facet list comma separated", "single_select_filter"=>"Single select filters comma separated", "items_per_page"=>"No of items per page","display_pages"=>"No. of pages to display");
 
           $textToStoreKeyMapArray = array("api"=>self::SEARCH_LIST_API,"facet_list"=>self::SEARCH_FACET_LIST,"single_select_filter"=>self::SEARCH_SINGLE_SELECT_FILTERS,"items_per_page"=>self::SEARCH_ITEMS_PER_PAGE,"display_pages"=>self::SEARCH_DISPLAY_PAGES);
 
-          $chekboxArray = array("search_enable"=>self::SEARCH_LIST_ENABLE,"fetch_price"=>self::SEARCH_FETCH_PRICE,"convert_price"=>self::SEARCH_CONVERT_PRICE,"is_ajax"=>self::SEARCH_IS_AJAX,"custom_template"=>self::SEARCH_CUSTOM_TEMPLATE);
+          $chekboxArray = array("search_enable"=>self::SEARCH_LIST_ENABLE,"fetch_price"=>self::SEARCH_FETCH_PRICE,"convert_price"=>self::SEARCH_CONVERT_PRICE,"is_ajax"=>self::SEARCH_IS_AJAX);
+          // ,"custom_template"=>self::SEARCH_CUSTOM_TEMPLATE);
 
           // input
           foreach ($textArray as $tKey => $tValue) {
@@ -482,6 +548,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $result .= '</div>';
           $result .= '</div>';
           $result .= '<div style="text-align:center;margin:10px auto;">'; 
+          $result .= '<input type="hidden" name="secret" value="'.$this->_password.'">';
           $result .= '<input type="submit" class="btn btn-md btn-primary" name="selected_search" value="Submit" style="padding:5px; "/>';
           $result .= '</div>';
           $result .= '</form>';
@@ -493,9 +560,10 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
       private function displayFeedConf($baseUrl){
           $saveFeedApiUrl = $baseUrl."index.php/expertrec-feed/config/savefeedconf?secret=".$this->_password;
+          $save_feedApi_url = $baseUrl."index.php/expertrec-feed/config/savefeedconf";
           $result = '<fieldset>';
           $result .= '<legend>Configure Feed</legend>';
-          $result .= '<form class="form-horizontal" action="'.$saveFeedApiUrl.'"  method="post" role="form" target="_blank">';
+          $result .= '<form class="form-horizontal" action="'.$save_feedApi_url .'"  method="post" role="form" target="_blank">';
 
           $textArray = array("log_api"=>"Feed log endpoint", "upload_api"=>"Feed upload endpoint");
           $textToStoreKeyMapArray = array("log_api"=>self::FEED_LOG_ENDPOINT,"upload_api"=>self::FEED_UPLOAD_ENDPOINT);
@@ -533,6 +601,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $result .= '</div>';
 
           $result .= '<div style="text-align:center;margin:10px auto;">'; 
+          $result .= '<input type="hidden" name="secret" value="'.$this->_password.'">';
           $result .= '<input type="submit" class="btn btn-md btn-primary" name="feed_conf" value="Submit" style="padding:5px; "/>';
           $result .= '</div>';
 
@@ -667,6 +736,389 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $result .= '</fieldset>';
           return $result;
       }
+  // pull feed from info page
+    public function displayPullFeed($baseUrl){
+      $result = '<div style="margin-top:20px">';
+      $result .= '<fieldset>';
+      $result .= '<legend>Pull Feed</legend>';
+
+      $feedUrl = $baseUrl.'index.php/expertrec-feed/api/pullFeed?secret='.$this->_password;
+      $feed_url = $baseUrl.'index.php/expertrec-feed/api/pullFeed';
+
+      $result .= '<form method ="POST" id="pullFeed" name="pullfeed" method="POST" action="'.$feed_url.'">';
+      $result .= '<p>'.$feedUrl.'</p>
+        <input type="hidden" name="secret" value="'.$this->_password.'">
+        <button type="submit" id="pullfeedSubmit" name="pullfeedSubmit">Submit</button></form>';
+
+
+      $result .= '</fieldset>';
+      $result .= '</div>';
+
+      return $result;
+    }
+
+    /*
+      Set & Set mid and secret if not set
+    */
+    public function getMidSecret(){
+
+      $logger = Mage::getSingleton('expertrec_recommendation/log');
+      $feedConfig = Mage::getSingleton('expertrec_recommendation/feed_feedconfig');
+
+      $mid = Mage::getStoreConfig(self::MERCHANT_ID);
+      $secret = Mage::getStoreConfig(self::CONFIG_SECRET);
+
+      // checking mid set/not
+      if($mid == "new_user"){
+
+        $siteArray = array();
+        //get admin-user details
+        $userData = Mage::getResourceModel('admin/user_collection')->getData();
+        $siteArray['admin_email'] = $userData[0]['email'];
+        $siteArray['admin_name'] = $userData[0]['firstname'].' '.$userData[0]['lastname'];
+        //get site details
+        $siteArray['website_url'] = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB);
+        $siteArray['site_email'] = Mage::getStoreConfig('trans_email/ident_general/email'); 
+        $siteArray['site_name'] = Mage::getStoreConfig('trans_email/ident_general/name');
+        $siteArray['site_host'] = $_SERVER['HTTP_HOST'];
+        $siteArray['site_subdomain'] = $_SERVER['SCRIPT_NAME'];
+        $siteArray['site_protocol'] = $_SERVER['REQUEST_SCHEME']; 
+        //ver & host
+        $siteArray['mage_ver'] = Mage::getVersion();
+        $siteArray['php_ver'] = phpversion();
+        $siteArray['expertrec_ver'] = '1.2.10';
+        // currency details
+        $siteArray['baseCurrency'] = Mage::app()->getStore()->getBaseCurrencyCode();
+        $baseCurrencyCode = Mage::app()->getBaseCurrencyCode();      
+        $allowedCurrencies = Mage::getModel('directory/currency')->getConfigAllowCurrencies(); 
+        $siteArray['currencyRates'] = Mage::getModel('directory/currency')->getCurrencyRates($baseCurrencyCode, array_values($allowedCurrencies));
+
+        $apiUrl = "http://magento.expertrec.com/20ff3ab58c9cd8ad52e24501cc46c84c/getSecretMid";
+        try{
+          // send request 
+          $request = new Zend_Http_Client();
+          $request->setUri($apiUrl)
+              ->setHeaders("Content-Type",'application/json')
+              ->setMethod(Zend_Http_Client::GET)
+              ->setParameterGet($siteArray)
+              ->setConfig(array('timeout' => 1));
+          //response with mid and secret
+          $response = $request->request();
+          $data = json_decode($response->getBody(),true);
+          $mid = $data['merchantid'];
+          $secret = $data['secret'];
+          //$logger->log("data ".print_r($data,1));
+          // update mid and secret
+          Mage::helper("expertrec_recommendation")
+                ->saveConfig('secret',$data['secret'])         
+                ->saveConfig('mid',$data['merchantid'])
+                ->clearCache();
+          
+          $logger->log("Generated new mid and secret");
+        }catch (Zend_Http_Client_Exception $e) {
+          $logger->log(sprintf($apiUrl ." failed to create mid&secret because HTTP error: %s", $e->getMessage()),Zend_Log::ERR);
+        }
+      }
+      else{
+        $data = array('merchantid' => $mid, 'secret' => $secret );
+      }
+      //set config with mid and secret
+      $storedPwd = base64_decode($secret);
+      $feedConfig->setSecret($storedPwd);
+      $storedMid = $mid;
+      $feedConfig->setMerchantId($storedMid);
+
+      return $data;
+
+    }
+
+    /*
+      Initial hit to backend with product count and secret
+    */
+    public function getProductCount($finalUrl,$secret){
+      $logger = Mage::getSingleton('expertrec_recommendation/log');
+      $filter = Mage::getSingleton('expertrec_recommendation/feed_feedfilter');
+      $array_count = array();
+      $websiteCollection = Mage::getModel('core/website')->getCollection()->load();
+      // $websitecount = count($websiteCollection);
+      $websitecount = $websiteCollection->getSize();
+      foreach ($websiteCollection as $website){
+        $websiteId=$website->getWebsiteId();
+
+        $this->_websiteId[] = $websiteId;
+        foreach ($website->getGroups() as $group) {
+          // all stores
+          $stores = $group->getStores();
+          $storeCount = count($stores);
+          foreach ($stores as $oStore) {
+            
+            $storeId=$oStore->getId();
+
+            $this->_storeId[] = $storeId;
+            // get all products
+            $collection = $filter->addBasicFilter($website,$oStore);
+            $count = $collection->getSize();
+
+            $array[$storeCount] = array('wid' => $websiteId, 'sid' => $storeId, 'total_products' => $count);
+            $storeCount--;
+          }
+          $collection->clear();
+        }
+      }
+
+      $array_count = array('site_host' => $_SERVER['HTTP_HOST'], 'secrete' => $secret, 'product_count' => $array );
+
+      // sending request
+      $response = Mage::getModel('expertrec_recommendation/api_request')
+          ->setPrepareRequestStatus(false)
+          ->setUserId('expertrec')
+          ->setUrl($finalUrl)
+          ->setMethod(Zend_Http_Client::GET)
+          ->setData($array_count)
+          ->setHeader("Content-Type",'application/json')
+          ->setPrepareRequestStatus(true)
+          ->sendRequest();
+
+      $logger->log('UserFeedPush_Track: request with product count sent');
+      if(!$response) {
+          $logger->log('UserFeedPush_Track: request failed for total_count');
+      }
+    }
+
+    /*
+      Send currency details
+    */
+    public function getCurrency($finalUrl){
+      $logger = Mage::getSingleton('expertrec_recommendation/log');
+
+      $baseCurrency = Mage::app()->getStore()->getBaseCurrencyCode();
+      $currCurrency = Mage::app()->getStore()->getCurrentCurrencyCode();
+
+      $baseCurrencyCode = Mage::app()->getBaseCurrencyCode();      
+      $allowedCurrencies = Mage::getModel('directory/currency')->getConfigAllowCurrencies(); 
+      $allCurrencyRates = Mage::getModel('directory/currency')->getCurrencyRates($baseCurrencyCode, array_values($allowedCurrencies));
+
+      $array_currency = array(
+        'baseCurrency' => $baseCurrency, 
+        'currCurrency' => $currCurrency,
+        'currencyRates' => $allCurrencyRates);
+
+      // $logger->log("currency ".print_r($array_currency,1));
+
+      // sending request
+      $response = Mage::getModel('expertrec_recommendation/api_request')
+          ->setPrepareRequestStatus(false)
+          ->setUserId('expertrec')
+          ->setUrl($finalUrl)
+          ->setMethod(Zend_Http_Client::GET)
+          ->setData($array_currency)
+          ->setHeader("Content-Type",'application/json')
+          ->setPrepareRequestStatus(true)
+          ->sendRequest();
+
+      $logger->log('UserFeedPush_Track: request with currency details sent');
+      if(!$response) {
+          $logger->log('UserFeedPush_Track: request failed for total_count');
+      }
+    }
+
+
+    /*
+    Push feed per product
+    */
+    public function pushFeedAction(){
+      $logger = Mage::getSingleton('expertrec_recommendation/log');
+
+      // update db to 1 once feed pushed
+      Mage::helper("expertrec_recommendation")->saveConfig('expertrec_feed_push','1');
+
+      //Increase memory limit
+      ini_set('memory_limit', '1024M');
+      //Increase maximum execution time to 5 hours (default in magento)
+      set_time_limit(18000);
+
+      // set&get mid and secret if mid is new_user
+      $data = $this->getMidSecret();
+      $mid = $data['merchantid'];
+      $secret = $data['secret'];
+
+      // feedUrl as api to userpushfeed
+      $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
+      // finalurl added with merchant id
+      $finalUrl = $feedUrl.''.$mid.'/';
+
+      // check for feed pushed 
+      $feed_pushed_page_info = Mage::getStoreConfig(self::PUSHED_FEED_PAGES);
+      $feed_pushed_page_info_array = explode(',', $feed_pushed_page_info);
+      $website_Id_pushed = $feed_pushed_page_info_array[0];
+      $store_Id_pushed = $feed_pushed_page_info_array[1];
+      $pages_pushed = $feed_pushed_page_info_array[2];
+
+      // calculate number of products and send
+      $this->getProductCount($finalUrl,$secret);
+
+      if($website_Id_pushed == 0){
+        // collect currencies
+        $this->getCurrency($finalUrl);
+      }
+
+      $filter = Mage::getSingleton('expertrec_recommendation/feed_feedfilter');
+      $formatter = Mage::getSingleton('expertrec_recommendation/feed_formatter')
+                    ->init();
+      $feedConfig = Mage::getSingleton('expertrec_recommendation/feed_feedconfig');
+      // get headers
+      $storedHeaders = Mage::getStoreConfig(self::CONFIG_HEADERS);
+
+      if (isset($storedHeaders)){
+        $header = explode(',', $storedHeaders);
+      }
+      else{
+        $header = array();
+      }
+      if(!empty($header)){
+
+        foreach ($this->_websiteId as $websiteId){
+
+          if($websiteId < $website_Id_pushed){            
+            continue;
+          }
+          else{
+            foreach ($this->_storeId as $storeId) {
+              if($websiteId <= $website_Id_pushed && $storeId < $store_Id_pushed){           
+                continue;
+              }
+              else{
+                $website = Mage::getModel('core/website')->load($websiteId);
+                $oStore = Mage::app()->getStore($StoreId);
+                $collection=$filter->addBasicFilter($website,$oStore)
+                ->setPageSize($feedConfig->pageSize);
+
+                $pageEnd = $feedConfig->pageEnd;
+                $lastPageNumber = $collection->getLastPageNumber();
+                if($pageEnd != 0 && $pageEnd < $lastPageNumber){
+                  $pages = $pageEnd;
+                }
+                else{
+                  $pages = $lastPageNumber;
+                }
+                $logger->log("Total no. of pages for which we are collecting feed in this reqeust: #".$pages." for store #".$storeId);
+                for($currentPage = $feedConfig->pageStart; $currentPage <= $pages; $currentPage++) {
+                  if($websiteId <= $website_Id_pushed && $storeId <= $store_Id_pushed && $currentPage < $pages_pushed){         
+                    continue;
+                  }
+                  else{
+                    $logger->log("Collecting feed for page: #".$currentPage);
+                    $collection->setCurPage($currentPage);
+                    // get all products
+                    foreach ($collection as $product) {
+                      try{
+                        $resultArray = $formatter->prepareRow($header,$product);
+                        $resultArray['storeId'] = $storeId;
+                        $resultArray['websiteId'] = $websiteId;
+                        // sending request
+                        $response = Mage::getModel('expertrec_recommendation/api_request')
+                            ->setPrepareRequestStatus(false)
+                            ->setUserId('expertrec')
+                            ->setUrl($finalUrl)
+                            ->setMethod(Zend_Http_Client::POST)
+                            ->setData($resultArray)
+                            ->setHeader("Content-Type",'application/json')
+                            ->setPrepareRequestStatus(true)
+                            ->sendRequest();
+                        // $logger->log('UserFeedPush_Track: request succeded for product with Id #'.$product->getId().' of store '.$storeId);
+                        if(!$response) {
+                            $logger->log('UserFeedPush_Track: request failed for product with Id #'.$product->getId());
+                        }
+                        $page = $websiteId.','.$storeId.','.$currentPage;
+                        Mage::helper("expertrec_recommendation")->saveConfig('expertrec_feed_pushed_pages',$page);
+                      }
+                      catch (Exception $e) {
+                        $logger->log("UserFeedPush_Track error: ".$e->getMessage());
+                      }
+                    } // if page is not pushed
+                  } // foreach collection
+                  $collection->clear();
+                } // for current page
+              } // if store is not pushed
+            } // for each store
+          } // if website is not pushed
+        } // for each websites
+        $websitecount--;
+        $page = '0,0,0';
+        Mage::helper("expertrec_recommendation")->saveConfig('expertrec_feed_pushed_pages',$page);
+      } // if not empty headers
+      // check for feed completion
+      if($websitecount == 0){
+        $array = array('completed' => 1, );
+        $response = Mage::getModel('expertrec_recommendation/api_request')
+        ->setPrepareRequestStatus(false)
+        ->setUserId('expertrec')
+        ->setUrl($finalUrl)
+        ->setMethod(Zend_Http_Client::GET)
+        ->setData($array)
+        ->setHeader("Content-Type",'application/json')
+        ->setPrepareRequestStatus(true)
+        ->sendRequest();
+        $logger->log('UserFeedPush_Track: request completed');
+        if(!$response) {
+          $logger->log('UserFeedPush_Track: Request not complete');
+        }
+      }
+      $logger->logMemoryUsage();
+    }
+
+    /*
+      upload feed by user
+    */
+    public function feedAction(){
+      
+      Mage::app()->getResponse()->setRedirect($_SERVER['HTTP_REFERER']);
+      Mage::app()->getResponse()->sendResponse();
+
+      ob_end_clean();
+      //avoid apache to kill the php running
+      ignore_user_abort(true);
+      ob_start();//start buffer output
+      //close session file on server side to avoid blocking other requests
+      session_write_close();
+      //send header to avoid the browser side to take content as gzip format
+      header("Content-Encoding: none");
+      header("Content-Length: ".ob_get_length());
+      header("Connection: close");
+      ob_end_flush();
+      flush();
+      $this->pushFeedAction();
+    } 
+  
+    /*
+      pull feed from info page
+    */
+    public function pullFeedAction(){
+      $logger = Mage::getSingleton('expertrec_recommendation/log');
+      try{
+
+        ob_end_clean();
+        //avoid apache to kill the php running
+        ignore_user_abort(true);
+        ob_start();//start buffer output
+        $logger->log("Pull Feed started in background.");
+        echo "Pull Feed started in background.";
+        //close session file on server side to avoid blocking other requests
+        session_write_close();
+        //send header to avoid the browser side to take content as gzip format
+        header("Content-Encoding: none");
+        header("Content-Length: ".ob_get_length());
+        header("Connection: close");
+        ob_end_flush();
+        flush();
+
+        $this->pushFeedAction();
+        die("Feed pulled successfully.");
+
+      }catch (Exception $e) {
+          $logger->log( "Not able to pull the feed: ".$e->getMessage());
+          $logger->log('callstack on error in pull feed : '.mageDebugBacktrace(true, true, true));
+      }
+    }
 
 }
-?>
