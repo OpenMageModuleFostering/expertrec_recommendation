@@ -17,7 +17,7 @@ $result['status'] = "Upgraded";
 //magento version
 $result['mage_ver'] = $mage_ver;
 //expertrec version
-$result['expertrec_ver'] = '1.2.5';
+$result['expertrec_ver'] = '1.2.6';
 //hostname 
 $result['site_host'] = $host;
 //Subdomain

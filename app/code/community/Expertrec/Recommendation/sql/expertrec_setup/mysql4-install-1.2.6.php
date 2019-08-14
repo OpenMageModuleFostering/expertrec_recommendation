@@ -15,7 +15,7 @@ $result['status'] = "Installed";
 //magento version
 $result['mage_ver'] = $mage_ver;
 //expertrec version
-$result['expertrec_ver'] = '1.2.5';
+$result['expertrec_ver'] = '1.2.6';
 //Subdomain
 $result['site_subdomain'] = $uri;
 //hostname 

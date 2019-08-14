@@ -26,7 +26,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const CONFIG_SECRET  = 'expertrec/general/secret';
 
 
-      const BUILD_NO = "1490312068";
+      const BUILD_NO = "1490608866";
       private $_password;
 
        //main function which loads the feed API
@@ -833,13 +833,8 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
         }
       }
 
-      $logger->log("product count ".print_r($array,1));
+      // $logger->log("product count ".print_r($array,1));
 
-      // feedUrl as api to userpushfeed
-      $feedUrl = "https://feed.expertrec.com/magento/b01eba6261ad7f174cd3a16523e86e65/";
-
-      // finalurl added with merchant id
-      $finalUrl = $feedUrl.''.$mid.'/';
       $array_count = array('secrete' => $secret, 'product_count' => $array );
       // sending request
       $response = Mage::getModel('expertrec_recommendation/api_request')
@@ -852,7 +847,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           ->setPrepareRequestStatus(true)
           ->sendRequest();
 
-      $logger->log('UserFeedPush_Track: request with product count sent');
+      //$logger->log('UserFeedPush_Track: request with product count sent');
       if(!$response) {
           $logger->log('UserFeedPush_Track: request failed for total_count');
       }
@@ -869,32 +864,16 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       //Increase maximum execution time to 5 hours (default in magento)
       set_time_limit(18000);
 
-      ob_end_clean();
-      //avoid apache to kill the php running
-      ignore_user_abort(true);
-      ob_start();//start buffer output
-      $logger->log("Pull Feed started in background.");
-      echo "Pull Feed started in background.";
-      //close session file on server side to avoid blocking other requests
-      session_write_close();
-      //send header to avoid the browser side to take content as gzip format
-      header("Content-Encoding: none");
-      header("Content-Length: ".ob_get_length());
-      header("Connection: close");
-      ob_end_flush();
-      flush();
-
-      $logger->log("checking for mid and secret");
+      //$logger->log("checking for mid and secret");
       // set&get mid and secret if mid is new_user
       $data = $this->getMidSecret();
       $mid = $data['merchantid'];
       $secret = $data['secret'];
 
       // feedUrl as api to userpushfeed
-      $feedUrl = "https://feed.expertrec.com/magento/b01eba6261ad7f174cd3a16523e86e65/";
+      $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
       // finalurl added with merchant id
       $finalUrl = $feedUrl.''.$mid.'/';
-      $logger->log("checking for product count");
       // calculate number of products and send
       $this->getProductCount($finalUrl,$secret);
 
@@ -905,7 +884,6 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       // get headers
       $storedHeaders = Mage::getStoreConfig(self::CONFIG_HEADERS);
 
-      $logger->log("checking for feed headers");
       if (isset($storedHeaders)){
         $header = explode(',', $storedHeaders);
       }
@@ -917,17 +895,13 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
         $websiteCollection = Mage::getModel('core/website')->getCollection()->load();
         // $websitecount = count($websiteCollection);
         $websitecount = $websiteCollection->getSize();
-        $logger->log("collecting total website info ");
         foreach ($websiteCollection as $website){
           $websiteId=$website->getWebsiteId();
-          $logger->log("collecting website info for website #".$websiteId);
           foreach ($website->getGroups() as $group) {
             // all stores
-            $logger->log("collecting total store info");
             $stores = $group->getStores();
             foreach ($stores as $oStore) {
               $storeId=$oStore->getId();
-              $logger->log("collecting store info for store #".$storeId);
 
               $collection=$filter->addBasicFilter($website,$oStore)
                 ->setPageSize($feedConfig->pageSize);
@@ -949,7 +923,6 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
               // // get all products
               // $collection = $filter->addBasicFilter($website,$oStore);
-              $logger->log("getting collection object");
               foreach ($collection as $product) {
                 try{
 
@@ -969,7 +942,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                       ->setPrepareRequestStatus(true)
                       ->sendRequest();
 
-                  $logger->log('UserFeedPush_Track: request succeded for product with Id #'.$product->getId().' of store '.$storeId);
+                  // $logger->log('UserFeedPush_Track: request succeded for product with Id #'.$product->getId().' of store '.$storeId);
                   if(!$response) {
                       $logger->log('UserFeedPush_Track: request failed for product with Id #'.$product->getId());
                   }
@@ -1021,27 +994,29 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       pull feed from info page
     */
     public function pullFeedAction(){
+      $logger = Mage::getSingleton('expertrec_recommendation/log');
       try{
-        //return array of all parameters sent
-        $requestParams = Mage::app()->getRequest()->getParams();
-        $Password = isset($requestParams['secret']) ? $requestParams['secret'] : '';
 
-        $storedPwd = Mage::getSingleton('expertrec_recommendation/feed_feedconfig')->getSecret();
-              
-        if(empty($storedPwd)){
-          $storedPwd = base64_decode(Mage::getStoreConfig(self::CONFIG_SECRET));
-          Mage::getSingleton('expertrec_recommendation/feed_feedconfig')->setSecret($storedPwd);
-        }
+        ob_end_clean();
+        //avoid apache to kill the php running
+        ignore_user_abort(true);
+        ob_start();//start buffer output
+        $logger->log("Pull Feed started in background.");
+        echo "Pull Feed started in background.";
+        //close session file on server side to avoid blocking other requests
+        session_write_close();
+        //send header to avoid the browser side to take content as gzip format
+        header("Content-Encoding: none");
+        header("Content-Length: ".ob_get_length());
+        header("Connection: close");
+        ob_end_flush();
+        flush();
 
-        if($Password == '' || $Password != $storedPwd){
-            die('ERROR: The specified password is invalid.');
-        }
-        else{
-          $this->pushFeedAction();
-          die("Feed pulled successfully.");
-        }
+        $this->pushFeedAction();
+        die("Feed pulled successfully.");
+
       }catch (Exception $e) {
-          Mage::getSingleton('expertrec_recommendation/log')->log( "Not able to pull the feed: ".$e->getMessage());
+          $logger->log( "Not able to pull the feed: ".$e->getMessage());
       }
     }
 
