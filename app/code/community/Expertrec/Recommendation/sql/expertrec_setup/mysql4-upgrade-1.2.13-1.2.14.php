@@ -8,11 +8,13 @@
 	*/
 
 	$installer = $this;
+
 	$mage_ver = Mage::getVersion();
 	$php_ver = phpversion();
-	$expertrec_version = "1.2.13";
+	$expertrec_version = "1.2.14";
 
 	$installer->startSetup();
+
 	$result =array();
 
 	$result['status'] = "Upgraded";
@@ -41,12 +43,15 @@
 	$result['admin_email'] = $admin_data[0]['email'];
 
 	$postData = '';
+
 	foreach($result as $key => $value) { 
 		$postData .= $key . '='.$value.'&'; 
 	}
+
 	$postData = rtrim($postData, '&');
 
 	$url = "https://feed.expertrec.com/magento-install/77c3b75abd2842e93b8c52c4aiu8y";
+
 	$curl = curl_init();
 	curl_setopt($curl, CURLOPT_URL, $url);
 	curl_setopt($curl, CURLOPT_POST, 1);
@@ -57,8 +62,25 @@
 	curl_close($curl);
 
 	$installer->run("
+		INSERT INTO {$this->getTable('core_config_data')} (`scope`, `scope_id`, `path`, `value`)
+	    VALUES ('default',0,'expertrec/general/mid','new_user'),
+	    ('default',0,'expertrec/general/secret','NTE5NTQ1Zjk4OGExYzYxOWFkOTkyN2Y3MDQ5MTQ3NTM='),
+	    ('default',0,'expertrec/general/log_endpoint','https://feed.expertrec.com/magento/9418bba77c3b75abd2842e93b8c52c4a'),
+	    ('default',0,'expertrec/general/headers','qty,is_in_stock,expert_image,expert_thumbnail,expert_category,expert_category_ids,final_price,entity_id,rating_summary,expert_url,created_at,image,msrp,name,price,short_description,sku,small_image,special_price,category_ids,minimal_price,status,visibility'),
+	    ('default',0,'expertrec/general/expertrec_image_width',250),
+	    ('default',0,'expertrec/general/expertrec_image_height',250),
+	    ('default',0,'expertrec/general/expertrec_thumbnail_width',80),
+	    ('default',0,'expertrec/general/expertrec_thumbnail_height',80),
+	    ('default',0,'expertrec/general/expertrec_feed_push',0),
+	    ('default',0,'expertrec/general/expertrec_feed_pushed_pages','0,0'),
+	    ('default',0,'expertrec/general/debug','1'),
+	    ('default',0,'expertrec/general/filters','filter_by_stock,filter_by_status')
+	    ON DUPLICATE KEY UPDATE `value`=`value`;
+	    
 		UPDATE {$this->getTable('core_config_data')} SET `value`=0 WHERE `path`='expertrec/general/expertrec_feed_push';
 		UPDATE {$this->getTable('core_config_data')} SET `value`='qty,is_in_stock,expert_image,expert_thumbnail,expert_category,expert_category_ids,final_price,entity_id,rating_summary,expert_url,created_at,image,msrp,name,price,short_description,sku,small_image,special_price,category_ids,minimal_price,status,visibility' WHERE `path`='expertrec/general/headers';
+		UPDATE {$this->getTable('core_config_data')} SET `value`='0,0' WHERE `path`='expertrec/general/expertrec_feed_pushed_pages';
 	");
+	
 	$installer->endSetup();
 ?>

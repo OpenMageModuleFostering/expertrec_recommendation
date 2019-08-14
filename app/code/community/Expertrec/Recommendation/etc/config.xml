@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Expertrec_Recommendation>
-            <version>1.2.13</version>
+            <version>1.2.14</version>
         </Expertrec_Recommendation>
     </modules>
     <global>
@@ -106,11 +106,11 @@
             </sales_order_payment_place_end>
             <cataloginventory_stock_item_save_after>
                 <observers>
-                    <expertrec_recommendation_save_category>
+                    <expertrec_recommendation_save_stock>
                         <type>singleton</type>
                         <class>expertrec_recommendation/observer</class>
                         <method>outOfStockReport</method>
-                    </expertrec_recommendation_save_category>
+                    </expertrec_recommendation_save_stock>
                 </observers>
             </cataloginventory_stock_item_save_after>
         </events>        

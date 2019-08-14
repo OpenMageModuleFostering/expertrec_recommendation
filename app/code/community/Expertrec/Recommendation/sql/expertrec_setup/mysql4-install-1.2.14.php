@@ -8,11 +8,13 @@
   */
 
   $installer = $this;
+
   $mage_ver = Mage::getVersion();
   $php_ver = phpversion();
-  $expertrec_version = "1.2.13";
+  $expertrec_version = "1.2.14";
   
   $installer->startSetup();
+
   $result =array();
 
   $result['status'] = "Installed";
@@ -41,12 +43,15 @@
   $result['admin_email'] = $admin_data[0]['email'];
 
   $postData = '';
+
   foreach($result as $key => $value) { 
     $postData .= $key . '='.$value.'&'; 
   }
+
   $postData = rtrim($postData, '&');
 
   $url = "https://feed.expertrec.com/magento-install/77c3b75abd2842e93b8c52c4aiu8y";
+
   $curl = curl_init();
   curl_setopt($curl, CURLOPT_URL, $url);
   curl_setopt($curl, CURLOPT_POST, 1);
@@ -67,9 +72,11 @@
     ('default',0,'expertrec/general/expertrec_thumbnail_width',80),
     ('default',0,'expertrec/general/expertrec_thumbnail_height',80),
     ('default',0,'expertrec/general/expertrec_feed_push',0),
-    ('default',0,'expertrec/general/expertrec_feed_pushed_pages','0,0,0'),
+    ('default',0,'expertrec/general/expertrec_feed_pushed_pages','0,0'),
+    ('default',0,'expertrec/general/debug','1'),
     ('default',0,'expertrec/general/filters','filter_by_stock,filter_by_status')
     ON DUPLICATE KEY UPDATE `value`=`value`;
   ");
+  
   $installer->endSetup();
 ?>
