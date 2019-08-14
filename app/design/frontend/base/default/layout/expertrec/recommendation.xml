@@ -1,19 +1,25 @@
 <?xml version="1.0"?>
 <layout version="0.1.0">
-    <!-- ON ALL PAGES -->
+    <!-- 
+    tracker to be included in all pages to include expertrec.js, 
+    product is included in product_view page to get pid, 
+    view is for search and info is for admin.
+    -->
     <default>
         <reference name="head">
-          <block name="expertrec.rec.tracking" template="expertrec/recommendation/tracker.phtml" after="-" type="core/template"/>
+            <block name="expertrec.rec.tracking" template="expertrec/recommendation/tracker.phtml" after="-" type="core/template"/>
         </reference>
     </default>
-    <!-- PRODUCT PAGE -->
+    <!-- <cms_index_index>
+        <reference name="footer.before">
+            <block type="expertrec_recommendation/popularqueries" name="search_terms" template="expertrec/page/html/sterms.phtml"/>
+        </reference>
+    </cms_index_index> -->
     <catalog_product_view>
         <reference name="before_body_end">
-          <block name="expertrec.rec.analytics.producttracking" template="expertrec/recommendation/tracking/product.phtml" after="-" type="core/template"/>
+            <block name="expertrec.rec.analytics.producttracking" template="expertrec/recommendation/tracking/product.phtml" after="-" type="core/template"/>
         </reference>
     </catalog_product_view>
-
-    <!-- Search -->
     <expertrec_autocomplete>
         <reference name="root">
             <action method="setTemplate"><template>page/2columns-left.phtml</template></action>
@@ -48,9 +54,9 @@
         <reference name="root">
             <action method="setTemplate"><template>page/1column.phtml</template></action>
         </reference>
-         <reference name="content">
+        <reference name="content">
             <block type="expertrec_recommendation/api" name="expertrec_feed1" 
-                template="expertrec/feed/info.phtml"/>
+            template="expertrec/feed/info.phtml"/>
         </reference>
     </expertrec_recommendation_api_info>
 </layout>

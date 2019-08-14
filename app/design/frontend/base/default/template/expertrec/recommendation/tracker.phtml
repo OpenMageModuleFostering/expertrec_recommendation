@@ -1,38 +1,38 @@
-<?php ?>
+<!-- loads on all pages once extension installed and include expertrec js -->
 <script type="text/javascript">
-
-<?php $category = Mage::registry("current_category");?>
-<?php
-$formKey = '';
-
-try{
-    $formkey_html = $this->getBlockHtml('formkey');
-    $pattern = '/.*form_key.*value=\"([^\"]+)\"/s';
-    if (preg_match($pattern, $formkey_html, $match)){
-        if ($match){
-         $formKey = $match[1];
+    <?php $category = Mage::registry("current_category");
+        $formKey = '';
+        try{
+            $formkey_html = $this->getBlockHtml('formkey');
+            $pattern = '/.*form_key.*value=\"([^\"]+)\"/s';
+            if (preg_match($pattern, $formkey_html, $match)){
+                if ($match){
+                    $formKey = $match[1];
+                }
+            }
+        } catch (Exception $e){
+            Mage::logException($e);
         }
+    ?>
+    if(typeof expertSiteConf == 'undefined' || expertSiteConf == null) {
+        var expertSiteConf = {
+            wid:"<?php echo Mage::app()->getWebsite()->getId();?>",
+            sid: "<?php echo Mage::app()->getStore()->getId(); ?>",
+            currency: "<?php echo Mage::app()->getStore()->getCurrentCurrencyCode(); ?>",
+            formkey:"<?php echo $formKey; ?>"
+            <?php if (isset($category)) { ?>
+                ,category:"<?php echo $category->getName(); ?>"
+            <?php } ?>
+        };
     }
-} catch (Exception $e){
-    Mage::logException($e);
-}
-
-?>
-
-if(typeof expertSiteConf == 'undefined' || expertSiteConf == null) {
-    var expertSiteConf = {
+    window.expertrecconf = {
+        formkey:"<?php echo $formKey; ?>",
+        merchantId:"<?php echo Mage::getStoreConfig('expertrec/general/mid');?>",
+        wid:"<?php echo Mage::app()->getWebsite()->getId();?>",
+        sid: "<?php echo Mage::app()->getStore()->getId(); ?>",
         currency: "<?php echo Mage::app()->getStore()->getCurrentCurrencyCode(); ?>",
-        formkey:"<?php echo $formKey; ?>"
-        <?php if (isset($category)) { ?>
-            ,category:"<?php echo $category->getName(); ?>"
-        <?php } ?>
-    };
-}
+        currency_rate: "<?php echo Mage::app()->getStore()->getCurrentCurrencyRate(); ?>"};
 
-/* * * DON'T EDIT BELOW LINE * * */
-
-(function(){var domain=window.location.hostname.replace(/\./g,""),ea=document.createElement('script');ea.type='text/javascript';ea.async=true;ea.src='//d3qm5o86jyjko6.cloudfront.net/rec/expertrec_'+domain+'.js';var m=document.getElementsByTagName('script')[0];m.parentNode.insertBefore(ea,m)})();var _eaq=_eaq || [];function expertApi(){if(window.expertrec_true){var args=Array.prototype.slice.call(arguments);window.ea_apispec[args[0]](args.slice(1,args.length))}else{_eaq.push(arguments);}}
-
-
+    /* * * DON'T EDIT BELOW LINE * * */
+    (function(){var domain=window.location.hostname.replace(/\./g,""),ea=document.createElement('script');ea.type='text/javascript';ea.async=true;ea.src='//d3qm5o86jyjko6.cloudfront.net/magento/expertrec_'+domain+'.js';var m=document.getElementsByTagName('script')[0];m.parentNode.insertBefore(ea,m)})();var _eaq=_eaq || [];function expertApi(){if(window.expertrec_true){var args=Array.prototype.slice.call(arguments);window.ea_apispec[args[0]](args.slice(1,args.length))}else{_eaq.push(arguments);}}
 </script>
-<?php  ?>

@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 <config>
     <menu>
+        <!-- 
+        Added admin-panel DropDown as Expertrec with magento.expertrec.com,
+        upload feed,support mail links. 
+        -->
         <expertrec translate="title" module="expertrec_recommendation">
             <title>Expertrec</title>
             <sort_order>99</sort_order>
@@ -10,9 +14,13 @@
                     <sort_order>10</sort_order>
                     <action>expertrec-signup</action>
                 </expertrec>
-                <!-- added support mail -->
+                <feed translate="title">
+                    <title>Upload Feed</title>
+                    <sort_order>15</sort_order>
+                    <action>expertrec_recommendation/api/feed</action>
+                </feed>
                 <support translate="title">
-                    <title>Add Support</title>
+                    <title>support@expertrec.com</title>
                     <sort_order>90</sort_order>
                     <action>expertrec-signup/index/mail</action>
                 </support>
