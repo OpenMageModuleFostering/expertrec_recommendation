@@ -23,26 +23,16 @@ class Expertrec_Recommendation_Model_Observer {
             Mage::getSingleton('expertrec_recommendation/log')->log('AddToCart_Track: product is not a valid type',Zend_Log::ERR);
             return $this;
         }
-
-        // added url to track rtr
-        //$lastUrl = Mage::getSingleton('core/session')->getLastUrl();
-        //$currUrl = Mage::helper('core/url')->getCurrentUrl();
-        //$ci_id = $_COOKIE['ci_id'];
-
-        //Mage::getSingleton('core/session')->setCartLastUrl($lastUrl);
-        //Mage::getSingleton('core/session')->setCartCurrUrl($currUrl);
-
         //return unique product id
         $uniqueId = Mage::helper('expertrec_recommendation')->getUniqueId($product);
+        $ci_id = $_COOKIE['ci_id'];
         
         //sending request
         //return boolean
         $response = Mage::getModel('expertrec_recommendation/api_request')
             ->setPrepareRequestStatus(false)
             ->setData(array(
-                    //'ci_id' => $ci_id,
-                    //'lastUrl' => $lastUrl,
-                    //'currUrl' => $currUrl,
+                    'ci_id' => $ci_id,
                     'item' => $uniqueId,
                     'event' => 3,
                     'sku' => $product->getSku(),
@@ -91,58 +81,25 @@ class Expertrec_Recommendation_Model_Observer {
 
             //return unique product id
             $uniqueId = Mage::helper('expertrec_recommendation')->getUniqueId($product, $item);
+            $ci_id = $_COOKIE['ci_id'];
 
-            // added url to track rtr
-            //$ci_id = $_COOKIE['ci_id'];
-            //$cartLastUrl =Mage::getSingleton('core/session')->getCartLastUrl();
-            //$cartCurrUrl =Mage::getSingleton('core/session')->getCartCurrUrl();
-
-            //Mage::getSingleton('core/session')->unsCartLastUrl();
-            //Mage::getSingleton('core/session')->unsCartCurrUrl();
-
-            // checking buy from addtocart
-            //if(isset($cartCurrUrl) && isset($cartLastUrl)){
-                //sending request
-                //return boolean
-                $response = Mage::getModel('expertrec_recommendation/api_request')
-                ->setPrepareRequestStatus(false)
-                ->setData(array(
-                        //'cartLastUrl' => $cartLastUrl,
-                        //'cartCurrUrl' => $cartCurrUrl,
-                        //'ci_id' => $ci_id,
-                        'item' => $uniqueId,
-                        'event' => 2,
-                        'sku' => $item->getSku(),
-                        'qty' => $item->getQtyOrdered(),
-                        'price' => $item->getPriceInclTax(),
-                        'domain' => $_SERVER['HTTP_HOST'],
-                        'ip' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'])  
-                    )
-                ->setHeader("User-Agent",$_SERVER['HTTP_USER_AGENT'])
-                ->prepareRequest()
-                ->sendRequest();
-
-            //}
-            //else{
-                //sending request
-                //return boolean
-               // $response = Mage::getModel('expertrec_recommendation/api_request')
-               // ->setPrepareRequestStatus(false)
-               // ->setData(array(
-                       // 'ci_id' => $ci_id,
-                       // 'item' => $uniqueId,
-                       // 'event' => 2,
-                       // 'sku' => $item->getSku(),
-                       // 'qty' => $item->getQtyOrdered(),
-                       // 'price' => $item->getPriceInclTax(),
-                       // 'domain' => $_SERVER['HTTP_HOST'],
-                       // 'ip' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'])  
-                    //)
-                //->setHeader("User-Agent",$_SERVER['HTTP_USER_AGENT'])
-                //->prepareRequest()
-                //->sendRequest();
-
-            //}
+            //sending request
+            //return boolean
+            $response = Mage::getModel('expertrec_recommendation/api_request')
+            ->setPrepareRequestStatus(false)
+            ->setData(array(
+                    'ci_id' => $ci_id,
+                    'item' => $uniqueId,
+                    'event' => 2,
+                    'sku' => $item->getSku(),
+                    'qty' => $item->getQtyOrdered(),
+                    'price' => $item->getPriceInclTax(),
+                    'domain' => $_SERVER['HTTP_HOST'],
+                    'ip' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'])  
+                )
+            ->setHeader("User-Agent",$_SERVER['HTTP_USER_AGENT'])
+            ->prepareRequest()
+            ->sendRequest();
             
             // Mage::getSingleton('expertrec_recommendation/log')->log("Order_Track: request made with uniqueId ".$uniqueId);
 
@@ -474,16 +431,9 @@ class Expertrec_Recommendation_Model_Observer {
             return $this;
         }
 
-        // added url to track rtr
-        $lastUrl = Mage::getSingleton('core/session')->getLastUrl();
-        $currUrl = Mage::helper('core/url')->getCurrentUrl();
-        $ci_id = $_COOKIE['ci_id'];
-
-        // Mage::getSingleton('core/session')->setCartLastUrl($lastUrl);
-        // Mage::getSingleton('core/session')->setCartCurrUrl($currUrl);
-
         //return unique product id
         $uniqueId = Mage::helper('expertrec_recommendation')->getUniqueId($product);
+        $ci_id = $_COOKIE['ci_id'];
         
         //sending request
         //return boolean
@@ -491,8 +441,6 @@ class Expertrec_Recommendation_Model_Observer {
             ->setPrepareRequestStatus(false)
             ->setData(array(
                     'ci_id' => $ci_id,
-                    'lastUrl' => $lastUrl,
-                    'currUrl' => $currUrl,
                     'item' => $uniqueId,
                     'event' => 17,
                     'sku' => $product->getSku(),

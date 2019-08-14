@@ -27,7 +27,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const PUSHED_FEED_PAGES = 'expertrec/general/expertrec_feed_pushed_pages';
 
 
-      const BUILD_NO = "1491991376";
+      const BUILD_NO = "1492086935";
       private $_password;
       private $_websiteId = array();
       private $_storeId = array();
@@ -786,7 +786,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
         //ver & host
         $siteArray['mage_ver'] = Mage::getVersion();
         $siteArray['php_ver'] = phpversion();
-        $siteArray['expertrec_ver'] = '1.2.7';
+        $siteArray['expertrec_ver'] = '1.2.8';
         // currency details
         $siteArray['baseCurrency'] = Mage::app()->getStore()->getBaseCurrencyCode();
         $baseCurrencyCode = Mage::app()->getBaseCurrencyCode();      

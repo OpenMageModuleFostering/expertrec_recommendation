@@ -31,9 +31,10 @@ if(typeof expertSiteConf == 'undefined' || expertSiteConf == null) {
 
 //Add website and store id
 <?php 
-Mage::getModel('core/cookie')->set("webId",Mage::app()->getWebsite()->getId());
-Mage::getModel('core/cookie')->set("storeId",Mage::app()->getStore()->getId());
-Mage::getModel('core/cookie')->set("currency",Mage::app()->getStore()->getCurrentCurrencyCode());
+setcookie("webId",Mage::app()->getWebsite()->getId());
+setcookie("storeId",Mage::app()->getStore()->getId());
+setcookie("currency",Mage::app()->getStore()->getCurrentCurrencyCode());
+setcookie("merchantId", Mage::getStoreConfig('expertrec/general/mid'));
 ?>
 
 /* * * DON'T EDIT BELOW LINE * * */
