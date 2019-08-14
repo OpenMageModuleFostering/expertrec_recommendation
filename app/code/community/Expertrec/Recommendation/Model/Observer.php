@@ -232,40 +232,67 @@ class Expertrec_Recommendation_Model_Observer {
                 if(empty($finalUrl)){
                     return $this;
                 }
-                $resultArray = Mage::getSingleton('expertrec_recommendation/feed_formatter')
-                                    ->init()
-                                    ->prepareRow($header,$product);
-                
 
-                //sending request
-                $response = Mage::getModel('expertrec_recommendation/api_request')
-                    ->setPrepareRequestStatus(false)
-                    ->setUserId('expertrec')
-                    ->setUrl($finalUrl)
-                    ->setMethod(Zend_Http_Client::POST)
-                    ->setData($resultArray)
-                    ->setHeader("Content-Type",'application/json')
-                    ->setPrepareRequestStatus(true)
-                    ->sendRequest();
+                $websiteIds = $product->getWebsiteIds();
+                if(!empty($websiteIds)){
+                    foreach($websiteIds as $webId){
 
-                $mid = Mage::getStoreConfig(self::MERCHANT_ID);
-                $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
-                $finalUrl = $feedUrl.''.$mid.'/product';
+                        $productId = $product->getId();
 
-                //sending request
-                $response = Mage::getModel('expertrec_recommendation/api_request')
-                    ->setPrepareRequestStatus(false)
-                    ->setUserId('expertrec')
-                    ->setUrl($finalUrl)
-                    ->setMethod(Zend_Http_Client::POST)
-                    ->setData($resultArray)
-                    ->setHeader("Content-Type",'application/json')
-                    ->setPrepareRequestStatus(true)
-                    ->sendRequest();
+                        $coreResource = Mage::getSingleton("core/resource");
+                        $catalogInventoryTable = method_exists($coreResource, 'getTableName')
+                        ? $coreResource->getTableName('cataloginventory_stock_item') : 'cataloginventory_stock_item';
+                        $stockfields = array("qty" => "qty", "manage_stock" => "manage_stock",
+                        "use_config_manage_stock" => "use_config_manage_stock", "is_in_stock" => "is_in_stock");
 
-                
-                if(!$response) {
-                    $logger->log('SaveCatalogProduct_Track: request failed for product with Id #'.$product->getId());
+                        $collection = Mage::getModel('catalog/product')->getCollection();
+                        $collection->addFieldToFilter('entity_id',$productId); 
+                        $collection->addAttributeToSelect('*');
+                        $collection->joinTable($catalogInventoryTable, 'product_id=entity_id', $stockfields, null, 'left');
+                        $collection->addPriceData(Mage_Customer_Model_Group::NOT_LOGGED_IN_ID, $webId);   
+
+                        foreach ($collection as $selectedProduct) {
+                            $productt = $selectedProduct ; 
+                        
+                            $resultArray = Mage::getSingleton('expertrec_recommendation/feed_formatter')
+                                ->init()
+                                ->prepareRow($header,$productt);
+
+                            // print_r($resultArray);
+                            // exit();
+                            
+                            //sending request
+                            $response = Mage::getModel('expertrec_recommendation/api_request')
+                                ->setPrepareRequestStatus(false)
+                                ->setUserId('expertrec')
+                                ->setUrl($finalUrl)
+                                ->setMethod(Zend_Http_Client::POST)
+                                ->setData($resultArray)
+                                ->setHeader("Content-Type",'application/json')
+                                ->setPrepareRequestStatus(true)
+                                ->sendRequest();
+
+                            $mid = Mage::getStoreConfig(self::MERCHANT_ID);
+                            $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
+                            $finalUrl = $feedUrl.''.$mid.'/product';
+
+                            //sending request
+                            $response = Mage::getModel('expertrec_recommendation/api_request')
+                                ->setPrepareRequestStatus(false)
+                                ->setUserId('expertrec')
+                                ->setUrl($finalUrl)
+                                ->setMethod(Zend_Http_Client::POST)
+                                ->setData($resultArray)
+                                ->setHeader("Content-Type",'application/json')
+                                ->setPrepareRequestStatus(true)
+                                ->sendRequest();
+
+                            
+                            if(!$response) {
+                                $logger->log('SaveCatalogProduct_Track: request failed for product with Id #'.$product->getId());
+                            }
+                        }
+                    }
                 }
             }
         }catch (Exception $e) {

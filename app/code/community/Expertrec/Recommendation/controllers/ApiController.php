@@ -27,8 +27,8 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const PUSHED_FEED_PAGES = 'expertrec/general/expertrec_feed_pushed_pages';
 
 
-      const BUILD_NO = "1492666192";
-      const EXPERTREC_VERSION = "1.2.12";
+      const BUILD_NO = "1493366400";
+      const EXPERTREC_VERSION = "1.2.13";
       private $_password;
       private $_websiteId = array();
       private $_storeId = array();
@@ -867,12 +867,13 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       }
 
       $array_count = array('site_host' => $_SERVER['HTTP_HOST'], 'secrete' => $secret, 'product_count' => $array );
+      $finalurl = $finalUrl.'product_count';
 
       // sending request
       $response = Mage::getModel('expertrec_recommendation/api_request')
           ->setPrepareRequestStatus(false)
           ->setUserId('expertrec')
-          ->setUrl($finalUrl)
+          ->setUrl($finalurl)
           ->setMethod(Zend_Http_Client::GET)
           ->setData($array_count)
           ->setHeader("Content-Type",'application/json')
@@ -904,12 +905,13 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
         'currencyRates' => $allCurrencyRates);
 
       // $logger->log("currency ".print_r($array_currency,1));
+      $finalurl = $finalUrl.'currency';
 
       // sending request
       $response = Mage::getModel('expertrec_recommendation/api_request')
           ->setPrepareRequestStatus(false)
           ->setUserId('expertrec')
-          ->setUrl($finalUrl)
+          ->setUrl($finalurl)
           ->setMethod(Zend_Http_Client::GET)
           ->setData($array_currency)
           ->setHeader("Content-Type",'application/json')
@@ -922,6 +924,62 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       }
     }
 
+    /*
+    Get all categories
+    */
+    public function getCategories($finalUrl){
+      $logger = Mage::getSingleton('expertrec_recommendation/log');
+
+      $category = Mage::getModel('catalog/category');
+      $tree = $category->getTreeModel();
+      $tree->load();
+      $ids = $tree->getCollection()->getAllIds();
+      if ($ids){
+        for($i=0;$i<count($ids);$i++){
+          $id = $ids[$i];
+          $cat = Mage::getModel('catalog/category');
+          $cat->load($id);
+
+          $entity_id = $cat->getId();
+          $name = $cat->getName();
+          $url_key = $cat->getUrlKey();
+          $url_path = $cat->getUrlPath();
+          $catarr['cat_id'] = $entity_id;
+          $catarr['cat_name'] = $name;
+          
+          $pathIdArray = explode('/', $cat->getPath());
+          $pathNameArray = array();
+          for($j=0;$j<count($pathIdArray);$j++){
+            $categoryy=Mage::getModel('catalog/category')->load($pathIdArray[$j]);
+            $pathNameArray[$j] = $categoryy->getName();
+          }
+          $category_id_path = implode(chr(3), $pathIdArray);
+          $catarr['cat_id_path'] = $category_id_path;
+          $category_path = implode(chr(3), $pathNameArray);
+          $catarr['cat_name_path'] = $category_path;
+          
+          $categoryArray[$i]=$catarr;
+        }
+      }
+      // $logger->log("categories : ".print_r($categoryArray,1));
+      $finalurl = $finalUrl.'all-category';
+
+      // sending request
+      $response = Mage::getModel('expertrec_recommendation/api_request')
+          ->setPrepareRequestStatus(false)
+          ->setUserId('expertrec')
+          ->setUrl($finalurl)
+          ->setMethod(Zend_Http_Client::GET)
+          ->setData($categoryArray)
+          ->setHeader("Content-Type",'application/json')
+          ->setPrepareRequestStatus(true)
+          ->sendRequest();
+
+      $logger->log('UserFeedPush_Track: request with category details sent');
+      if(!$response) {
+          $logger->log('UserFeedPush_Track: request failed for total_count');
+      }
+    }
 
     /*
     Push feed per product
@@ -960,6 +1018,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       if($website_Id_pushed == 0){
         // collect currencies
         $this->getCurrency($finalUrl);
+        $this->getCategories($finalUrl);
       }
 
       $filter = Mage::getSingleton('expertrec_recommendation/feed_feedfilter');
@@ -968,6 +1027,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       $feedConfig = Mage::getSingleton('expertrec_recommendation/feed_feedconfig');
       // get headers
       $storedHeaders = Mage::getStoreConfig(self::CONFIG_HEADERS);
+      $finalurl = $finalUrl.'product';
 
       if (isset($storedHeaders)){
         $header = explode(',', $storedHeaders);
@@ -1019,7 +1079,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                         $response = Mage::getModel('expertrec_recommendation/api_request')
                             ->setPrepareRequestStatus(false)
                             ->setUserId('expertrec')
-                            ->setUrl($finalUrl)
+                            ->setUrl($finalurl)
                             ->setMethod(Zend_Http_Client::POST)
                             ->setData($resultArray)
                             ->setHeader("Content-Type",'application/json')

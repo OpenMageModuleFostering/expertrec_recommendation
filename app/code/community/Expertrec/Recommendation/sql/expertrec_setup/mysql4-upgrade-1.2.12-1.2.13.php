@@ -10,7 +10,7 @@
 	$installer = $this;
 	$mage_ver = Mage::getVersion();
 	$php_ver = phpversion();
-	$expertrec_version = "1.2.12";
+	$expertrec_version = "1.2.13";
 
 	$installer->startSetup();
 	$result =array();

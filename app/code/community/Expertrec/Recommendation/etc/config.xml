@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Expertrec_Recommendation>
-            <version>1.2.12</version>
+            <version>1.2.13</version>
         </Expertrec_Recommendation>
     </modules>
     <global>
