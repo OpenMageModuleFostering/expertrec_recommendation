@@ -25,7 +25,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const MERCHANT_ID  = 'expertrec/general/mid';
 
 
-      const BUILD_NO = "1487659024";
+      const BUILD_NO = "1487660408";
       private $_password;
 
        //main function which loads the feed API

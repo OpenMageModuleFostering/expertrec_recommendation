@@ -1,23 +1,24 @@
 <?php
 
-//echo 'Running The Upgrade from 1.1.5 to 1.1.6 : '.get_class($this)."\n <br /> \n";
-Mage::log("Running The Upgrade from 1.0.11 to 1.0.12 : ".get_class($this));
+//echo 'Installing extension: '.get_class($this)."\n <br /> \n";
+Mage::log("Installing magento : 1.2.1");
+
 
 $installer = $this;
 
-$host = $_SERVER['HTTP_HOST'];  
+$host = $_SERVER['HTTP_HOST']; 
 $uri = $_SERVER['REQUEST_URI']; 
-
 
 $installer->startSetup();
 
 $result =array();
-//status
-$result['status'] = "Upgraded";
-//hostname 
-$result['site_host'] = $host;
+
+//Status
+$result['status'] = "Installed";
 //Subdomain
 $result['site_subdomain'] = $uri;
+//hostname 
+$result['site_host'] = $host;
 //selecting for site_details
 $site_data = $installer->getConnection()->fetchAll("select * from {$this->getTable('core_config_data')} where `path` like '%trans_email%'");
 //site name and email
