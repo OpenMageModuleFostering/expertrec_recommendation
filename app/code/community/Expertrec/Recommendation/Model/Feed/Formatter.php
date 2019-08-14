@@ -43,7 +43,11 @@
                     case 'expert_url':
                         //$vValue=$product->getProductUrl();
                         //changing ProductUrl from /index.php/catalog/product/view/id/539/s/racer-back-maxi-dress/ to /index.php/racer-back-maxi-dress.html
-                        $url = Mage::getBaseUrl().$product->url_path;
+                        //$url = Mage::getBaseUrl().$product->url_path;
+                        //Stripping the parts of the getpayload, only URL needed
+                        $url =$product->getUrlInStore(array('_ignore_category' => true));
+                        $url = substr($url,0,strpos($url,"?"));
+                        //Mage::getSingleton('expertrec_recommendation/log')->log("Getting product url ".$url);
                         $vValue=$url;
                         break;
                     case 'qty':

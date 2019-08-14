@@ -206,9 +206,16 @@ class Expertrec_Recommendation_Model_Observer {
      * Method to track save product
      */
     public function saveProduct(Varien_Event_Observer $observer){
+
         $logger = Mage::getSingleton('expertrec_recommendation/log');
+
+        //Fetching product
         $product = $observer->getEvent()->getDataObject();
 
+        //Apply rule to get updated price details
+        Mage::getModel('catalogrule/rule')->applyAllRulesToProduct($product);
+
+        //sanity check
         if (!isset($product) || 
             !$product instanceof Mage_Catalog_Model_Product || 
             !$product->hasData('entity_id'))
@@ -218,6 +225,9 @@ class Expertrec_Recommendation_Model_Observer {
         }
 
         try{
+            //Fetching global out of stock
+            $global_display_out_of_stock = Mage::getStoreConfig('cataloginventory/options/show_out_of_stock');
+
             $storedHeaders = Mage::getStoreConfig(self::CONFIG_HEADERS);
             if (isset($storedHeaders)){
                 $header = explode(',', $storedHeaders);
@@ -228,17 +238,25 @@ class Expertrec_Recommendation_Model_Observer {
             if(!empty($header)){
                 // passing product to identify product url
                 $feedUrl = $this->getFeedEndpoint();
-                $finalUrl = $feedUrl.'/product';
-                if(empty($finalUrl)){
-                    return $this;
-                }
 
-                $websiteIds = $product->getWebsiteIds();
-                if(!empty($websiteIds)){
-                    foreach($websiteIds as $webId){
+                $mid = Mage::getStoreConfig(self::MERCHANT_ID);
+                $feedUrl_new = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/".$mid;
 
+                $storeIds = $product->getStoreIds();
+                if(!empty($storeIds)){
+
+                    foreach($storeIds as $storeId){
+                        //Need to refetch the product based on wid
                         $productId = $product->getId();
 
+                        // $logger->log("for store # ".$storeId);
+
+                        $store = Mage::app()->getStore($storeId);
+
+                        $websiteId = $store->getWebsiteId();
+                        $website = Mage::app()->getWebsite($websiteId);
+
+                        //Fetching collection
                         $coreResource = Mage::getSingleton("core/resource");
                         $catalogInventoryTable = method_exists($coreResource, 'getTableName')
                         ? $coreResource->getTableName('cataloginventory_stock_item') : 'cataloginventory_stock_item';
@@ -246,60 +264,163 @@ class Expertrec_Recommendation_Model_Observer {
                         "use_config_manage_stock" => "use_config_manage_stock", "is_in_stock" => "is_in_stock");
 
                         $collection = Mage::getModel('catalog/product')->getCollection();
-                        $collection->addFieldToFilter('entity_id',$productId); 
-                        $collection->addAttributeToSelect('*');
-                        $collection->joinTable($catalogInventoryTable, 'product_id=entity_id', $stockfields, null, 'left');
-                        $collection->addPriceData(Mage_Customer_Model_Group::NOT_LOGGED_IN_ID, $webId);   
+                        //Filtering the fetched collection
+                        $collection->addFieldToFilter('entity_id',$productId)
+                        ->addWebsiteFilter($websiteId)
+                        ->setStoreId($storeId)
+                        ->addAttributeToSelect('*')
+                        ->addCategoryIds()
+                        ->joinTable($catalogInventoryTable, 'product_id=entity_id', $stockfields, null, 'left');
 
-                        foreach ($collection as $selectedProduct) {
-                            $productt = $selectedProduct ; 
-                        
-                            $resultArray = Mage::getSingleton('expertrec_recommendation/feed_formatter')
-                                ->init()
-                                ->prepareRow($header,$productt);
+                        //Looping to check disable and out of stock
+                        foreach($collection as $productt){
 
-                            // print_r($resultArray);
-                            // exit();
-                            
-                            //sending request
-                            $response = Mage::getModel('expertrec_recommendation/api_request')
-                                ->setPrepareRequestStatus(false)
-                                ->setUserId('expertrec')
-                                ->setUrl($finalUrl)
-                                ->setMethod(Zend_Http_Client::POST)
-                                ->setData($resultArray)
-                                ->setHeader("Content-Type",'application/json')
-                                ->setPrepareRequestStatus(true)
-                                ->sendRequest();
+                            $producttId = $productt->getId();
+                            $status = $productt->getData('status');
 
-                            $mid = Mage::getStoreConfig(self::MERCHANT_ID);
-                            $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
-                            $finalUrl = $feedUrl.''.$mid.'/product';
+                            //If product is disabled, send a BE hit
+                            if($status == 2){
+                                $logger->log("product # ".$producttId." is disabled for store # ".$storeId);
 
-                            //sending request
-                            $response = Mage::getModel('expertrec_recommendation/api_request')
-                                ->setPrepareRequestStatus(false)
-                                ->setUserId('expertrec')
-                                ->setUrl($finalUrl)
-                                ->setMethod(Zend_Http_Client::POST)
-                                ->setData($resultArray)
-                                ->setHeader("Content-Type",'application/json')
-                                ->setPrepareRequestStatus(true)
-                                ->sendRequest();
+                                $status_info = '2'.chr(4).'Disabled';
+                                $disabled_array = array('status' => $status_info,'entity_id' => $producttId,'storeId' => $storeId,'websiteId' => $websiteId);
 
-                            
-                            if(!$response) {
-                                $logger->log('SaveCatalogProduct_Track: request failed for product with Id #'.$product->getId());
+                                $finalUrl_disabled = $feedUrl.'/disabled';
+                                // $logger->log("final disabled url is  : ".$finalUrl_disabled);
+
+                                $response = Mage::getModel('expertrec_recommendation/api_request')
+                                    ->setPrepareRequestStatus(false)
+                                    ->setUserId('expertrec')
+                                    ->setUrl($finalUrl_disabled)
+                                    ->setMethod(Zend_Http_Client::POST)
+                                    ->setData($disabled_array)
+                                    ->setHeader("Content-Type",'application/json')
+                                    ->setPrepareRequestStatus(true)
+                                    ->sendRequest();
+                                
+                                $finalUrl_disabled_new = $feedUrl_new.'/disabled';
+
+                                //sending request to 2 endpoints, for backward compatibility
+                                $response = Mage::getModel('expertrec_recommendation/api_request')
+                                    ->setPrepareRequestStatus(false)
+                                    ->setUserId('expertrec')
+                                    ->setUrl($finalUrl_disabled_new)
+                                    ->setMethod(Zend_Http_Client::POST)
+                                    ->setData($disabled_array)
+                                    ->setHeader("Content-Type",'application/json')
+                                    ->setPrepareRequestStatus(true)
+                                    ->sendRequest();
+
+                                if(!$response) {
+                                        $logger->log('SaveCatalogProduct_Track: request failed for product with Id #'.$product->getId());
+                                    }
+                         }
+                         else{
+                            //This can only mean that the product is out of stock, and didn't return a value because global out of stock is not set
+                            if($productt->getData("is_in_stock") == 0 && $global_display_out_of_stock == 0 ){
+                                $logger->log("product # ".$producttId." is out_of_stock for store # ".$storeId);
+
+                                $qty = $productt->getData('qty');
+                                $stock_array = array('qty' => $qty,'entity_id' => $producttId,'is_in_stock'=>0,'storeId' => $storeId,'websiteId' => $websiteId);
+
+                                $finalUrl_stock = $feedUrl.'/stock';
+                                // $logger->log("final stock url is  : ".$finalUrl_stock);
+
+                                $response = Mage::getModel('expertrec_recommendation/api_request')
+                                    ->setPrepareRequestStatus(false)
+                                    ->setUserId('expertrec')
+                                    ->setUrl($finalUrl_stock)
+                                    ->setMethod(Zend_Http_Client::POST)
+                                    ->setData($stock_array)
+                                    ->setHeader("Content-Type",'application/json')
+                                    ->setPrepareRequestStatus(true)
+                                    ->sendRequest();
+                                
+                                $finalUrl_stock_new = $feedUrl_new.'/stock';
+
+                                //sending request to 2 endpoints, for backward compatibility
+                                $response = Mage::getModel('expertrec_recommendation/api_request')
+                                    ->setPrepareRequestStatus(false)
+                                    ->setUserId('expertrec')
+                                    ->setUrl($finalUrl_stock_new)
+                                    ->setMethod(Zend_Http_Client::POST)
+                                    ->setData($stock_array)
+                                    ->setHeader("Content-Type",'application/json')
+                                    ->setPrepareRequestStatus(true)
+                                    ->sendRequest();
+
+                                if(!$response) {
+                                        $logger->log('SaveCatalogProduct_Track: request failed for product with Id #'.$product->getId());
+                                    }
+                            }else{
+                                //Fetch price data for product if it is in stock, or if it is out of stock and has global setting to true
+                                $collectionWithPrice = Mage::getModel('catalog/product')->getCollection();
+                                $collectionWithPrice->addFieldToFilter('entity_id',$producttId)
+                                ->addWebsiteFilter($websiteId)
+                                ->setStoreId($storeId)
+                                ->addAttributeToSelect('*')
+                                ->addCategoryIds()
+                                ->joinTable($catalogInventoryTable, 'product_id=entity_id', $stockfields, null, 'left')
+                                ->addPriceData(Mage_Customer_Model_Group::NOT_LOGGED_IN_ID, $websiteId);
+                                    //Looping on price product, to send BE hit
+                                foreach($collectionWithPrice as $selectedProduct){
+
+                                    $selectedProduct->setStoreId($storeId);
+
+                                    $resultArray = Mage::getSingleton('expertrec_recommendation/feed_formatter')
+                                    ->init()
+                                    ->prepareRow($header,$selectedProduct);
+                                    $resultArray['storeId'] = $storeId;
+                                    $resultArray['websiteId'] = $websiteId;
+
+                                    $logger->log("product # ".$productId." has data for store # ".$storeId);
+                                    // $logger->log(print_r($resultArray,1));
+
+                                    $finalUrl = $feedUrl.'/product';
+                                    // $logger->log("final product url is  : ".$finalUrl);
+
+
+                                    $response = Mage::getModel('expertrec_recommendation/api_request')
+                                    ->setPrepareRequestStatus(false)
+                                    ->setUserId('expertrec')
+                                    ->setUrl($finalUrl)
+                                    ->setMethod(Zend_Http_Client::POST)
+                                    ->setData($resultArray)
+                                    ->setHeader("Content-Type",'application/json')
+                                    ->setPrepareRequestStatus(true)
+                                    ->sendRequest();
+
+                                    $finalUrl_new = $feedUrl_new.'/product';
+
+                                        //sending request to 2 endpoints, for backward compatibility
+                                    $response = Mage::getModel('expertrec_recommendation/api_request')
+                                    ->setPrepareRequestStatus(false)
+                                    ->setUserId('expertrec')
+                                    ->setUrl($finalUrl_new)
+                                    ->setMethod(Zend_Http_Client::POST)
+                                    ->setData($resultArray)
+                                    ->setHeader("Content-Type",'application/json')
+                                    ->setPrepareRequestStatus(true)
+                                    ->sendRequest();
+
+                                    if(!$response) {
+                                        $logger->log('SaveCatalogProduct_Track: request failed for product with Id #'.$product->getId());
+                                    }
+
+                                }
                             }
                         }
                     }
+
                 }
             }
-        }catch (Exception $e) {
-            $logger->log("SaveCatalogProduct_Track error: ".$e->getMessage());
+
         }
-        return $this;
+    }catch (Exception $e) {
+        $logger->log("SaveCatalogProduct_Track error: ".$e->getMessage());
     }
+    return $this;
+}
 
     /**
      * Method to track save Category
@@ -497,7 +618,7 @@ class Expertrec_Recommendation_Model_Observer {
         $qty = $item_array["qty"];
 
         if ($qty == 0){
-            $stockArray = array('product_id' => $product_id, 'qty' => $qty, 'is_in_stock' =>0);
+            $stockArray = array('entity_id' => $product_id, 'qty' => $qty, 'is_in_stock' =>0);
 
             $feedUrl = $this->getFeedEndpoint();
             $finalUrl = $feedUrl.'/stock';

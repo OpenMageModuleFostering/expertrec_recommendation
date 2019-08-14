@@ -26,8 +26,8 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const CONFIG_SECRET  = 'expertrec/general/secret';
       const PUSHED_FEED_PAGES = 'expertrec/general/expertrec_feed_pushed_pages';
 
-      const BUILD_NO = "1494571967";
-      const EXPERTREC_VERSION = "1.2.16";
+      const BUILD_NO = "1495177474";
+      const EXPERTREC_VERSION = "1.2.17";
       private $_password;
       private $_storeId = array();
 

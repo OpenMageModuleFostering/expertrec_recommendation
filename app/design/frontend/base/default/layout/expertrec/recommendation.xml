@@ -10,6 +10,11 @@
             <block name="expertrec.rec.tracking" template="expertrec/recommendation/tracker.phtml" after="-" type="core/template"/>
         </reference>
     </default>
+    <cms_index_index>
+        <reference name="footer.before">
+            <block type="expertrec_recommendation/popularqueries" name="search_terms" template="expertrec/page/html/sterms.phtml"/>
+        </reference>
+    </cms_index_index>
     <catalog_product_view>
         <reference name="before_body_end">
             <block name="expertrec.rec.analytics.producttracking" template="expertrec/recommendation/tracking/product.phtml" after="-" type="core/template"/>

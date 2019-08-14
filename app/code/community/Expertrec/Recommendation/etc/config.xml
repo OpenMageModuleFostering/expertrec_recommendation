@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Expertrec_Recommendation>
-            <version>1.2.16</version>
+            <version>1.2.17</version>
         </Expertrec_Recommendation>
     </modules>
     <global>
@@ -113,6 +113,17 @@
                     </expertrec_recommendation_save_stock>
                 </observers>
             </cataloginventory_stock_item_save_after>
+
+            <!-- <adminhtml_controller_urlrewrite_save>
+                <observers>
+                    <expertrec_recommendation_save_url>
+                        <type>singleton</type>
+                        <class>expertrec_recommendation/observer</class>
+                        <method>url</method>
+                    </expertrec_recommendation_save_url>
+                </observers>
+            </adminhtml_controller_urlrewrite_save>-->
+
         </events>        
     </global>    
     <frontend>

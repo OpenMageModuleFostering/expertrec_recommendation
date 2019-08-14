@@ -30,6 +30,7 @@
         ->addAttributeToSelect('*')
         ->joinTable($catalogInventoryTable, 'product_id=entity_id', $stockfields, null, 'left')
         ->addCategoryIds()
+        ->addUrlRewrite()
         // ->addAttributeToFilter('visibility',$visiblityCondition)
         ->addPriceData(Mage_Customer_Model_Group::NOT_LOGGED_IN_ID, $website->getWebsiteId());
       if(in_array('not_visible_individually',$storedFiltersArray) || in_array('visible_catalog',$storedFiltersArray) || in_array('visible_search',$storedFiltersArray) || in_array('visible_catalog_search',$storedFiltersArray) ){
