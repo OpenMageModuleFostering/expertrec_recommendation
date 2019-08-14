@@ -11,8 +11,19 @@ class Expertrec_Recommendation_Block_Product_List_Toolbar extends Mage_Catalog_B
      */
     public function setCollection($collection)
     {
-        $this->_collection = $collection;
+        $searchEnable = Mage::helper('expertrec_recommendation/searchhelper')->getSearchEnable();         
+        $pageIdentifier = Mage::app()->getFrontController()->getAction()->getFullActionName();
+        $isSearchPage = $pageIdentifier === 'catalogsearch_result_index' || 
+                    $pageIdentifier === 'expertrec_result_index';     
+                   
+        //Don't use the toolbar when it is not the search page or when the search is not enabled
+        if(!$isSearchPage || !(isset($searchEnable) && $searchEnable == "true"))
+        {
+            Mage::getSingleton('expertrec_recommendation/log')->log(" Default Toolbar call made "); 
+            return parent::setCollection($collection);
+        }
 
+        $this->_collection = $collection;
         $this->_collection->setCurPage($this->getCurrentPage());
 
         // we need to set pagination only if passed value integer and more that 0

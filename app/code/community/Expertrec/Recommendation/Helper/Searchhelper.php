@@ -4,7 +4,7 @@ class Expertrec_Recommendation_Helper_Searchhelper extends Mage_Core_Helper_Abst
 
 	const SEARCH_LIST_API = 'search/api';
   const SEARCH_FACET_LIST = 'search/facets_list';
-  
+  const SEARCH_LIST_ENABLE = 'search/enable';  
 
   protected $_facetList = array();
   protected $_resultIds = array();
@@ -21,6 +21,11 @@ class Expertrec_Recommendation_Helper_Searchhelper extends Mage_Core_Helper_Abst
     }
 
     return $newUrl;
+  }
+
+  public function getSearchEnable(){
+     $searchEnable = Mage::helper('expertrec_recommendation')->getConfig(self::SEARCH_LIST_ENABLE);
+     return $searchEnable;
   }
 
   protected function getSearchApi($confArray){
