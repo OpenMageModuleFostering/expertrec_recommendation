@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Expertrec_Recommendation>
-            <version>1.2.11</version>
+            <version>1.2.12</version>
         </Expertrec_Recommendation>
     </modules>
     <global>
@@ -29,33 +29,18 @@
             </expertrec_setup>
         </resources>
         <events>
-            <checkout_cart_product_add_after>
+            <!-- 
+            Added Hook for save_product,delete_product,save_category,view_product,
+            add_to_wishlist,add_to_cart,remove_from_cart,place_order,sale_went_out_of_stock 
+            -->
+            <catalog_product_save_commit_after>
                 <observers>
-                    <expertrec_recommendation_track_addtocart>
-                        <type>singleton</type>
+                    <expertrec_recommendation_stockupdate>
                         <class>expertrec_recommendation/observer</class>
-                        <method>trackAddToCart</method>
-                    </expertrec_recommendation_track_addtocart>
+                        <method>saveProduct</method>
+                    </expertrec_recommendation_stockupdate>
                 </observers>
-            </checkout_cart_product_add_after>
-            <sales_order_payment_place_end>
-                <observers>
-                    <expertrec_recommendation_track_order>
-                        <type>singleton</type>
-                        <class>expertrec_recommendation/observer</class>
-                        <method>trackOrder</method>
-                    </expertrec_recommendation_track_order>
-                </observers>
-            </sales_order_payment_place_end>
-            <sales_quote_remove_item>
-                <observers>
-                    <expertrec_recommendation_track_remove_item>
-                        <type>singleton</type>
-                        <class>expertrec_recommendation/observer</class>
-                        <method>trackRemoveItem</method>
-                    </expertrec_recommendation_track_remove_item>
-                </observers>
-            </sales_quote_remove_item>
+            </catalog_product_save_commit_after>
             <catalog_product_delete_before>
                 <observers>
                     <expertrec_recommendation_track_delete>
@@ -65,15 +50,6 @@
                     </expertrec_recommendation_track_delete>
                 </observers>
             </catalog_product_delete_before>
-            <catalog_product_save_commit_after>
-                <observers>
-                    <expertrec_recommendation_stockupdate>
-                        <class>expertrec_recommendation/observer</class>
-                        <method>saveProduct</method>
-                    </expertrec_recommendation_stockupdate>
-                </observers>
-            </catalog_product_save_commit_after>
-            <!-- Hook on New Category and Category Edit -->
             <catalog_category_save_commit_after>
                 <observers>
                     <expertrec_recommendation_save_category>
@@ -83,8 +59,7 @@
                     </expertrec_recommendation_save_category>
                 </observers>
             </catalog_category_save_commit_after>
-            <!-- Hook on item view 
-            <catalog_controller_product_view>
+            <!-- <catalog_controller_product_view>
                 <observers>
                     <itemsviewed>
                         <type>model</type>
@@ -92,8 +67,7 @@
                         <method>saveProductVisitHistory</method>
                     </itemsviewed>
                 </observers>
-            </catalog_controller_product_view> -->
-            <!-- Hook for adding wishlist -->
+            </catalog_controller_product_view>  -->
             <wishlist_product_add_after>
                 <observers>
                     <expertrec_recommendation_add_wishlist>         
@@ -103,7 +77,33 @@
                     </expertrec_recommendation_add_wishlist>
                 </observers>
             </wishlist_product_add_after> 
-			<!-- when product sold out & goes out of stock -->
+            <checkout_cart_product_add_after>
+                <observers>
+                    <expertrec_recommendation_track_addtocart>
+                        <type>singleton</type>
+                        <class>expertrec_recommendation/observer</class>
+                        <method>trackAddToCart</method>
+                    </expertrec_recommendation_track_addtocart>
+                </observers>
+            </checkout_cart_product_add_after>
+            <sales_quote_remove_item>
+                <observers>
+                    <expertrec_recommendation_track_remove_item>
+                        <type>singleton</type>
+                        <class>expertrec_recommendation/observer</class>
+                        <method>trackRemoveItem</method>
+                    </expertrec_recommendation_track_remove_item>
+                </observers>
+            </sales_quote_remove_item>
+            <sales_order_payment_place_end>
+                <observers>
+                    <expertrec_recommendation_track_order>
+                        <type>singleton</type>
+                        <class>expertrec_recommendation/observer</class>
+                        <method>trackOrder</method>
+                    </expertrec_recommendation_track_order>
+                </observers>
+            </sales_order_payment_place_end>
             <cataloginventory_stock_item_save_after>
                 <observers>
                     <expertrec_recommendation_save_category>
@@ -137,8 +137,7 @@
                     <module>Expertrec_Recommendation_Adminhtml</module>
                     <frontName>expertrec-signup</frontName>
                 </args>
-            </expertrec-signup>
-            <!-- added support email -->           
+            </expertrec-signup>          
             <expertrec>
                 <use>standard</use>
                 <args>
@@ -161,7 +160,6 @@
             </controller_action_layout_load_before>
         </events>
     </frontend>
-	<!-- added template for admin-notification -->
     <adminhtml>
         <layout>
             <updates>
@@ -171,5 +169,4 @@
             </updates>
         </layout>
     </adminhtml>
-
 </config>

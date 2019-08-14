@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <layout version="0.1.0">
-    <!-- ON ALL PAGES -->
+	<!-- 
+	Display info to upload feed on new installation on admin-panel dashboard
+	-->
     <default>
         <reference name="notifications">
             <block type="core/template" name="expertrec_recommendation_adminhtml_notifications" template="expertrec/recommendation/notifications.phtml"></block>
         </reference>
     </default>
-
 </layout>

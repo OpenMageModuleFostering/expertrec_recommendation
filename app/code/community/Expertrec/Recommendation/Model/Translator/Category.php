@@ -1,50 +1,41 @@
 <?php
-
 /**
- * Translates category ids into a complete path.
- */
- 
+* Translates category ids into a complete path.
+*/
 class Expertrec_Recommendation_Model_Translator_Category {
-
     protected $_categoryPaths = array();
     protected $_categoryIdPaths = array();
-
     /**
-     * Translates a category id stored in the supplied field to a full category path.
-     *
-     * @param $product 
-     * @return string
-     */
+    * Translates a category id stored in the supplied field to a full category path.
+    *
+    * @param $product 
+    * @return string
+    */
+
     public function translate($product,$idStr) {
         $categoryPathArray=array();
         $categoryArray  = array_unique($product->getCategoryIds());
         foreach ($categoryArray as $category_id) {
-            
-            if($idStr == 0)
-            {
+            if($idStr == 0){
                 $curPath=$this->_getCategoryPath($category_id);
-            }
-            elseif ($idStr == 1)
-            {
+            }elseif ($idStr == 1){
                 $curPath=$this->_getCategoryIdPath($category_id);
             }
-            
             if(!empty($curPath)){
-              $categoryPathArray[] = $curPath;
+                $categoryPathArray[] = $curPath;
             }
         }
-        
-	    //Mage::getSingleton('expertrec_recommendation/log')->log(" The categories are : ".implode(chr(4),$categoryPathArray));
+        //Mage::getSingleton('expertrec_recommendation/log')->log(" The categories are : ".implode(chr(4),$categoryPathArray));
         return implode(chr(4),$categoryPathArray);
     }
 
     /**
-     * First check given category_id present in the global category_path Array or not. If not found then make a db call to 
-     * fetch category path and set it to category_path array.
-     *
-     * @param category id
-     * @return category path
-     */
+    * First check given category_id present in the global category_path Array or not. If not found then make a db call to 
+    * fetch category path and set it to category_path array.
+    *
+    * @param category id
+    * @return category path
+    */
     protected function _getCategoryPath($categoryId) {
         try{
             if (!array_key_exists($categoryId, $this->_categoryPaths)) {
@@ -65,16 +56,15 @@ class Expertrec_Recommendation_Model_Translator_Category {
             Mage::getSingleton('expertrec_recommendation/log')->log("Error in getCategoryPath: ".$e->getMessage());
             return '';
         }
-
     }
 
     /**
-     * First check given category_id present in the global category_path Array or not. If not found then make a db call to 
-     * fetch category path and set it to category_path array.
-     *
-     * @param category id
-     * @return category path
-     */
+    * First check given category_id present in the global category_path Array or not. If not found then make a db call to 
+    * fetch category path and set it to category_path array.
+    *
+    * @param category id
+    * @return category path
+    */
     protected function _getCategoryIdPath($categoryId) {
         try{
             if (!array_key_exists($categoryId, $this->_categoryIdPaths)) {
@@ -82,7 +72,7 @@ class Expertrec_Recommendation_Model_Translator_Category {
                 if ($category === null || !$category->getIsActive() || $category->getLevel() == 1){
                     $this->_categoryIdPaths[$categoryId] = '';
                 }else {
-		            //Mage::getSingleton('expertrec_recommendation/log')->log("Inside category ID");
+                //Mage::getSingleton('expertrec_recommendation/log')->log("Inside category ID");
                     $parentCategoryPath = $this->_getCategoryIdPath($category->getParentId());
                     if ($parentCategoryPath == '') {
                         $this->_categoryIdPaths[$categoryId] = $categoryId;
@@ -96,7 +86,5 @@ class Expertrec_Recommendation_Model_Translator_Category {
             Mage::getSingleton('expertrec_recommendation/log')->log("Error in getCategoryPath: ".$e->getMessage());
             return '';
         }
-
     }
-
 }

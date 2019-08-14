@@ -27,8 +27,8 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const PUSHED_FEED_PAGES = 'expertrec/general/expertrec_feed_pushed_pages';
 
 
-      const BUILD_NO = "1492584121";
-      const EXPERTREC_VERSION = "1.2.11";
+      const BUILD_NO = "1492666192";
+      const EXPERTREC_VERSION = "1.2.12";
       private $_password;
       private $_websiteId = array();
       private $_storeId = array();
@@ -510,8 +510,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
           $textToStoreKeyMapArray = array("api"=>self::SEARCH_LIST_API,"facet_list"=>self::SEARCH_FACET_LIST,"single_select_filter"=>self::SEARCH_SINGLE_SELECT_FILTERS,"items_per_page"=>self::SEARCH_ITEMS_PER_PAGE,"display_pages"=>self::SEARCH_DISPLAY_PAGES);
 
-          $chekboxArray = array("search_enable"=>self::SEARCH_LIST_ENABLE,"fetch_price"=>self::SEARCH_FETCH_PRICE,"convert_price"=>self::SEARCH_CONVERT_PRICE,"is_ajax"=>self::SEARCH_IS_AJAX);
-          // ,"custom_template"=>self::SEARCH_CUSTOM_TEMPLATE);
+          $chekboxArray = array("search_enable"=>self::SEARCH_LIST_ENABLE,"fetch_price"=>self::SEARCH_FETCH_PRICE,"convert_price"=>self::SEARCH_CONVERT_PRICE,"is_ajax"=>self::SEARCH_IS_AJAX,"custom_template"=>self::SEARCH_CUSTOM_TEMPLATE);
 
           // input
           foreach ($textArray as $tKey => $tValue) {

@@ -491,7 +491,7 @@ class Expertrec_Recommendation_Model_Observer {
 
             $mid = Mage::getStoreConfig(self::MERCHANT_ID);
             $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
-            $finalUrl = $feedUrl.''.$mid.'/category';
+            $finalUrl = $feedUrl.''.$mid.'/stock';
                     
             //sending request
             $response = Mage::getModel('expertrec_recommendation/api_request')
