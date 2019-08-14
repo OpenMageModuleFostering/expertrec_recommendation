@@ -1,0 +1,14 @@
+<?php ?>
+<script type="text/javascript">
+    <?php $product = Mage::registry('current_product'); 
+        	if (isset($product)) { ?>
+       				expertSiteConf["pid"] = "<?php echo Mage::helper('expertrec_recommendation')->getUniqueId($product); ?>";
+    <?php } ?>
+    
+		(function(){
+				var	pid = expertSiteConf.pid ? expertSiteConf.pid : window.location.href;
+    		expertApi(1,pid);
+		})();
+    
+</script>
+<?php ?>

@@ -1,0 +1,604 @@
+<?php ?>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<style type="text/css">
+                  table {border-spacing: 0;border-collapse: collapse;width: 100%;}
+                  .table-hover > tbody > tr:hover {background-color: #f5f5f5;}
+                  tbody td, thead th{padding: 8px;line-height: 1.42857143;vertical-align: top;border-top: 1px solid #ddd;text-align:left;word-wrap:break-word;white-space: normal;}
+                  thead:first-child > tr:first-child > th {border-top: 0;}
+                  thead th {vertical-align: bottom;border-bottom:2px solid #ddd;background-color:#f5f5f5;text-align:center;}
+                  fieldset { display: block;margin:10px 2px;padding: .35em .625em .75em; border: 1px solid silver; }
+                  legend{padding: 0px 5px; width: auto; border: 0px none;margin:0;}
+                  fieldset p { text-align: left; display: block; }
+                  #searchConfSection input[type="checkbox"]{bottom: 2px;}
+                  .setHeadersForm label{padding:0px 10px 10px 0px;} .setHeadersForm input{vertical-align: middle;}
+</style>
+<script type="text/javascript">
+	function toggle_select()
+	{
+		var checkboxes = document.getElementsByName("check_list[]"); 
+		var button = document.getElementById("toggleSelect"); 
+		if(button.value == "Select All")
+			{
+				for (var i in checkboxes)
+				{
+					checkboxes[i].checked = "checked";
+				 } 
+				button.value = "Deselect All"
+			}
+			else
+			{
+				for (var i in checkboxes)
+				{
+					checkboxes[i].checked = ""; 
+				} 
+			    button.value = "Select All";
+			}
+	}
+</script>
+<div class="container-fluid">
+	<h4 style='margin:20px auto 10px;'>Extension Version: <span style='color:red;'><?php echo (string)Mage::getConfig()->getNode('modules/Expertrec_Recommendation/version')?></span></h4>
+	<h4 style='margin:10px auto;'>Extension Build No.: <span style='color:red;'><?php echo Mage::registry('buildno'); ?></span></h4>
+	<h4 style='margin:10px auto;'>Magento Version: <span style='color:red;'><?php echo Mage::getVersion(); ?></span></h4>
+	<h4 style='margin:10px auto;'>Merchant ID: <span style='color:red;'><?php echo $this->getMerchantID(); ?></span></h4>
+	<ul class="nav nav-tabs" style="margin-top:20px;">
+                  <li class="active"><a data-toggle="tab" href="#apiSection">Api</a></li>
+                  <li><a data-toggle="tab" href="#feedHeader">Feed Header</a></li>
+                  <li><a data-toggle="tab" href="#feedEndpointSection">Feed Config</a></li>
+                  <li><a data-toggle="tab" href="#searchConfSection">Search</a></li>
+                  <li><a data-toggle="tab" href="#siteDetailsSection">Details</a></li>
+    </ul>
+    <div style="clear:both;"></div>
+    <div class="tab-content">
+    	<?php 
+	    	$imageParams = $this->getImageParams(); 
+	    	$imgwidth = "";
+	    	$imgheight = "";
+	        $thumbwidth = ""; 
+	        $thumbheight = "";
+
+	        if($imageParams['thumbwidth'] != "" && isset($imageParams['thumbwidth']))
+	    	{
+	    		$thumbwidth = $imageParams['thumbwidth'];
+	    	}
+	    	if($imageParams['thumbheight'] != "" && isset($imageParams['thumbheight']))
+	    	{
+	    		$thumbheight = $imageParams['thumbheight'];
+	    	}
+
+	    	if($imageParams['imgwidth'] != "" && isset($imageParams['imgwidth']))
+	    	{
+	    		$imgwidth = $imageParams['imgwidth'];
+	    	}
+	    	if($imageParams['imgheight'] != "" && isset($imageParams['imgheight']))
+	    	{
+	    		$imgheight = $imageParams['imgheight'];
+	    	}    	
+    	?>
+    	<!--Defining API Info section-->
+	     <div id="apiSection" class="tab-pane fade in active">
+	            <div style="margin-top:20px;">
+	                <fieldset>
+	                  <legend>Getting Feeds Api</legend>
+	                  <table class="table-hover" style="margin: 1em auto;">
+	                    <thead>
+	                        <tr>
+	                          <th>Website ID</th>
+	                          <th>Website Name</th>
+	                          <th>Store ID</th>
+	                          <th>Store Name</th>
+	                          <th>Store Language</th>
+	                          <th>Total# Products</th>
+	                          <th>Url</th>
+	                        </tr>
+	                    </thead>
+	                    <tbody>
+	                    	<?php foreach ($this->getWebsiteStoreInfo() as $_item): ?>
+	                    	  <tr>
+	                    	  	<td style="text-align:center;"><?php echo $_item['wid'] ?></td>
+	                    	    <td style="text-align:center;"><?php echo $_item['wname'] ?></td>
+	                    	    <td style="text-align:center;"><?php echo $_item['sid'] ?></td>
+	                    	    <td style="text-align:center;"><?php echo $_item['sname'] ?></td>
+	                    	    <td style="text-align:center;"><?php echo Mage::getStoreConfig('general/locale/code', $_item['sid']);  ?></td>
+	                    	    <?php if(isset($_item['pcount'])): ?>
+	                    	        <td style="text-align:center;"><?php echo $_item['pcount'] ?></td>
+	                    		<?php endif;?>
+	                    		<?php if(isset($_item['pcounterr'])): ?>
+	                    		    <td style="text-align:center;"><b style="color:red;">Error: </b>
+	                    		    	<?php echo $_item['pcounterr'] ?>
+	                    		    </td>
+	                    	    <?php endif;?>    	    
+	                    	    
+	                    	    <!-- <td><a href = "<?php //echo $_item['surl'] ?>"><?php //echo $_item['surl'] ?></a></td> -->
+	                    	    <!-- form post request -->
+	                    	    <td><form method="post" action="<?php echo $_item['surl'] ?>" id="webform<?php echo $_item['sid']; ?>" name="webform<?php echo $_item['sid']; ?>">
+	                    	    	<p><?php echo $_item['surl'] ?></p>
+	                    	    	<button type="submit" id ="websubmit<?php echo $_item['sid']; ?>" name ="websubmit<?php echo $_item['sid']; ?>">submit</button>
+	                    	    </form></td>
+
+	                    	  </tr>
+							<?php endforeach; ?>
+	                    </tbody>
+	                   </table>
+	               </fieldset>
+	           </div>
+	           <p>
+	              <strong>Note:</strong><br />
+	              <span>
+	                1. Each page contains 500 products.<br />
+	                2. For Getting custom image size, kindly add <b>width</b> and <b>height</b> parameter in the api url.
+	              </span>
+              </p>
+              <div style="margin-top:20px">
+              	  <?php              	    
+              	    $customImageUrl = $this->getCustomApiUrl()."&width=170&height=170";
+
+              	    if((isset($imageParams["imgwidth"]) && $imageParams["imgwidth"] != "") 
+              	    	&& (isset($imageParams["imgheight"]) && $imageParams["imgheight"] != "")){
+              	    	$customImageUrl = $this->getCustomApiUrl()."&width=".$imageParams["imgwidth"]."&height=".$imageParams["imgheight"]; 
+              	    }
+              	    elseif(isset($imageParams["imgwidth"]) && $imageParams["imgwidth"] != ""){
+              	    	$customImageUrl =$this->getCustomApiUrl()."&width=".$imageParams["imgwidth"]."&height=170";
+              	    }
+              	    elseif(isset($imageParams["imgheight"]) && $imageParams["imgheight"] != ""){
+              	    	$customImageUrl =$this->getCustomApiUrl()."&width=170&height=".$imageParams["imgheight"];
+              	    }
+
+              	  ?>
+              	  
+	              <fieldset>
+	              	<legend>Example</legend>
+	              	<!-- form post request -->
+              		<form method="post" action="<?php echo $this->getCustomApiUrl()?>" id="custImgForm" name="custImgForm">
+		              	<p><b>With Custom Image</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getCustomApiUrl().'&width=170&height=170' ?>"><?php //echo $customImageUrl ?></a></p> -->
+		              	<p><?php echo $this->getCustomApiUrl().'&width=170&height=170' ?></p>
+		              	<input type="hidden" name="width" value="170">
+		              	<input type="hidden" name="height" value="170">
+		              	<button id="custsub" name="custsub" type="submit" name="onsubmit" value="custom">submit</button>
+	              	</form>
+
+	              	<form method="post" action="<?php echo $this->getCustomApiUrl()?>">
+		              	<p><b>With pagination without page size(default page size is 500)</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getCustomApiUrl().'&ps=1&pe=2' ?>">
+		              		<?php //echo  $this->getCustomApiUrl().'&ps=1&pe=2' ?></a></p> -->
+		              	<p><?php echo $this->getCustomApiUrl().'&ps=1&pe=2' ?></p>
+		              	<input type="hidden" name="ps" value="1">
+		              	<input type="hidden" name="pe" value="2">
+		              	<button type="submit" name="onsubmit" value="custom_nosize">submit</button>
+	                </form>
+
+	              	<form method="post" action="<?php echo $this->getCustomApiUrl()?>" id="custform1" name="custform1">
+		              	<p><b>With pagination without page size(default page size is 500)</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?>">
+		              		<?php //echo  $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?></a></p> -->
+		              	<p><?php echo $this->getCustomApiUrl().'&ps=1&pe=2&psize=50' ?></p>
+		              	<input type="hidden" name="ps" value="1">
+		              	<input type="hidden" name="pe" value="2">
+		              	<input type="hidden" name="psize" value="50">
+		              	<button id="custimgsub" name="custimgsub" type="submit" name="onsubmit" value="custom_size">submit</button>
+	                </form>
+
+	              </fieldset>
+	           </div>
+              <div style="margin-top:20px">
+              	<fieldset>
+              		<legend>Getting Popular Products Api</legend>
+              		<!-- form post request -->
+              		<form method="post" action="<?php echo $this->getSuggestionApiUrl() ?>" id="sugform" name="sugform">
+	              		<p><b>Without pagination</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getSuggestionApiUrl() ?>"><?php //echo  $this->getSuggestionApiUrl() ?></a></p> -->
+		              	<p><?php echo $this->getSuggestionApiUrl() ?></p>
+		              	<button id="sugsub" name="sugsub" type="submit" name="onsubmit" value="sugg">submit</button>
+	                </form>
+
+	                <form id="sug1form" name="sug1form" method="post" action="<?php echo $this->getSuggestionApiUrl() ?>">
+		              	<p><b>With pagination without page size(default page size is 500)</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getSuggestionApiUrl().'&ps=1&pe=2' ?>"><?php //echo  $this->getSuggestionApiUrl().'&ps=1&pe=2' ?></a></p> -->
+		              	<p><?php echo $this->getSuggestionApiUrl().'&ps=1&pe=2' ?></p>
+		              	<input type="hidden" name="ps" value="1">
+		              	<input type="hidden" name="pe" value="2">
+		              	<button id="sug1sub" name="sug1sub" type="submit" name="onsubmit" value="sugg_nosize">submit</button>
+	                </form>
+
+	              	<form method="post" id="sug2form" name="sug2form" action="<?php echo $this->getSuggestionApiUrl() ?>">
+		              	<p><b>With pagination without page size(default page size is 500)</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?>"><?php //echo  $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?></a></p> -->
+		              	<p><?php echo $this->getSuggestionApiUrl().'&ps=1&pe=2&psize=50' ?></p>
+		              	<input type="hidden" name="ps" value="1">
+		              	<input type="hidden" name="pe" value="2">
+		              	<input type="hidden" name="psize" value="50">
+		              	<button id="sug2sub" name="sug2sub" type="submit" name="onsubmit" value="sugg_size">submit</button>
+	                </form>
+
+              	</fieldset>
+              </div>
+              <div style="margin-top:20px">
+              	<fieldset>
+              		<legend>Getting log & Cleaning Expertrec Directory Api's</legend>
+              		<form id="logform" name="logform" method="post" action="<?php echo $this->getLogUrl() ?>">
+              			<p><b>Get Log Url</b></p>
+              			<!-- <p><a href="<?php echo $this->getLogUrl() ?>"><?php echo  $this->getLogUrl() ?></a></p> -->
+              			<p><?php echo $this->getLogUrl() ?></p>
+              			<button id="logsub" name="logsub" type="submit">submit</button>
+              		</form>
+	              	<form id="cleanform" name="cleanform" method="post" action="<?php echo $this->getCleanDirUrl() ?>" target="_blank">
+		              	<p><b>Get Cleandir Url</b></p>
+		              	<!-- <p><a href="<?php //echo $this->getCleanDirUrl() ?>" target="_blank"><?php //echo  $this->getCleanDirUrl() ?></a></p> -->
+		              	<p><?php echo $this->getCleanDirUrl() ?></p>
+              			<button id="cleansub" name="cleansub" type="submit">submit</button>
+              		</form>	 
+              	</fieldset>
+             </div>
+             <!-- xml-file 
+             <div style="margin-top:20px">
+             	<fieldset>
+	        		<legend>Xml File</legend>
+	        		<form method="post" action="<?php //echo $this->getBaseUrl().'xml.php';?>" target="_blank">
+						<input type="hidden" name="secret" value="<?php //echo $this->getSecret();?>">
+						<p><?php //echo $this->getBaseUrl().'xml.php'; ?></p>
+						<button type="submit">submit</button>
+					</form>
+             	</fieldset>
+             </div>-->
+	    </div>   
+	    <!--End of API Info section-->
+
+	    <!--Defining the feed header page-->
+	    <div id="feedHeader" class="tab-pane fade">
+            <div style="margin-top:20px">
+            	<fieldset>
+            		<legend>Configure Feed Headers</legend>
+            		<form class="setHeadersForm"
+            		 action="<?php echo $this->getBaseUrl()."index.php/expertrec-feed/config/saveheaders?secret=".$this->getSecret() ?>"  method="post" role="form" target="_blank">
+            		 	<?php 
+            		 	$storedFilters = $this->getStoredFilters();
+            		 	$storedHeaders = $this->getStoredHeaders();
+            		 	?>
+            			<?php foreach ($this->getAllAttributes() as $_attr): ?>	
+            			      <?php if($storedHeaders!= null && in_array($_attr, $storedHeaders)): ?>                   	  
+	                    	  	<input type="checkbox" id="<?php echo $_attr; ?>" name="check_list[]" 
+	                    	  	value="<?php echo $_attr; ?>" checked>
+	                    	  <?php else: ?>
+	                    	      <input type="checkbox" id="<?php echo $_attr; ?>" name="check_list[]" 
+	                    	      value="<?php echo $_attr; ?>">
+	                    	   <?php endif; ?>  
+	                    	   <label for="<?php echo $_attr; ?>"><?php echo $_attr; ?></label>                	                	  
+					    <?php endforeach; ?>
+
+					    <!--Image config section-->
+            			<div style="display:block">
+            				<h4>Expertrec Image</h4>
+            				
+	            				<label for="imagewidth">Image Width</label>
+	            				<input type="text" id="imagewidth" name="imagewidth" placeholder="Give image width" value="<?php echo $imgwidth; ?>">
+            			</div>
+            		    <div style="display:block">
+            		            <label for="imageheight">Image Height</label>
+            					<input type="text" id="imageheight" name="imageheight" placeholder="Give image height" value="<?php echo $imgheight; ?>">       					
+            			   
+            			</div>
+
+            			<!--Thumbnail Image config section-->
+            			<div style="display:block">
+            				<h4>Expertrec Thumbnail</h4>
+            				
+	            				<label for="thumbnailwidth">Thumbnail Width</label>
+	            				<input type="text" id="thumbnailwidth" name="thumbnailwidth" placeholder="Give thumbnail width" value="<?php echo $thumbwidth ?>">
+            			</div>
+            		    <div style="display:block">
+            		            <label for="thumbnailheight">Thumbnail Height</label>
+            					<input type="text" id="thumbnailheight" name="thumbnailheight" placeholder="Give thumbnail height" value="<?php echo $thumbheight ?>">       					
+            			   
+            			</div>
+
+            			<!--Configure Filters section-->
+            			<fieldset>
+            				<legend>Configure Filters</legend>
+            				<?php foreach ($this->getAllFilters() as $_filter): ?>	
+            			      <?php if($storedFilters != null && in_array($_filter, $storedFilters)): ?>                    	  
+	                    	  	<input type="checkbox" id="<?php echo $_filter; ?>" name="filter_check_list[]" 
+	                    	  	value="<?php echo $_filter; ?>" checked>
+	                    	  <?php else: ?>
+	                    	      <input type="checkbox" id="<?php echo $_filter; ?>" name="filter_check_list[]" 
+	                    	      value="<?php echo $_filter; ?>">
+	                    	   <?php endif; ?>  
+	                    	   <label for="<?php echo $_filter; ?>"><?php echo $_filter; ?></label>           	                	  
+					    	<?php endforeach; ?>
+            			</fieldset>
+
+            			<!-- Submit buttons section-->
+            			<div style="text-align:center;margin:10px auto;">
+            				<input type="button" class="btn btn-md btn-primary" id="toggleSelect" value="Select All" onClick="toggle_select()" style="padding:5px; margin: 5px;"/>
+            				<input type="submit" class="btn btn-md btn-primary" name="selected_headers" value="Submit" style= "padding:5px; margin: 5px;"/>
+            			</div>            			
+            		</form>
+            	</fieldset>
+            	<!--Displaying selected headers-->
+            	<?php if(!empty($storedHeaders) &&
+            	isset($storedHeaders) && count($storedHeaders) > 0): ?>
+	            	<fieldset style="margin-top:20px;">
+	            	    <legend>Selected Headers</legend>
+	            		   <div class="setHeadersForm">
+	            		   		<?php foreach ($this->getStoredHeaders() as $_header): ?>	                    	  
+		                    	  	<input type="checkbox" name="<?php echo $_header; ?>" value="<?php echo $_header; ?>" disabled checked>
+		                    	    <label><?php echo $_header; ?></label>	                    	  
+								<?php endforeach; ?>
+	            			</div>
+	            	</fieldset>
+               <?php endif;?>
+            	<!--Displaying selected filters-->
+            	<?php if(!empty(Mage::getStoreConfig('expertrec/general/filters')) &&
+            	      isset($storedFilters) && count($storedFilters) > 0): ?>
+	            	<fieldset style="margin-top:20px;">
+	            	    <legend>Selected Filters</legend>
+	            		   <div class="setHeadersForm">
+	            		   		<?php foreach ($this->getStoredFilters() as $_sfilter): ?>	                    	  
+		                    	  	<input type="checkbox" name="<?php echo $_sfilter; ?>" value="<?php echo $_sfilter; ?>" disabled checked>
+		                    	    <label><?php echo $_sfilter; ?></label>	                    	  
+								<?php endforeach; ?>
+	            			</div>
+	            	</fieldset>
+                <?php endif;?>
+            </div>
+ 		</div>
+ 		<!--End of feed header section-->
+
+	    <!-- Feed api configuration section start -->
+        <div id="feedEndpointSection" class="tab-pane fade">
+            <div style="margin-top:20px">
+              <fieldset>
+              	<legend>Configure Feed</legend>
+              	<form class="form-horizontal" action="<?php echo $this->getBaseUrl()."index.php/expertrec-feed/config/savefeedconf?secret=".$this->getSecret(); ?>"  method="post" role="form" 
+              		target="_blank">
+
+              		<!--Display URL-->
+              		<?php foreach ($this->getFeedConfUrl() as $_feedUrl): ?>
+	                   <div class="form-group">
+	                   	  <label class="control-label col-sm-2" for="search_<?php echo $_feedUrl['tkey'] ?>"><?php echo $_feedUrl['label'] ?>:</label>
+	                   	  <div class="col-sm-8">
+		                   	  <?php if(isset($_feedUrl["storevalue"])): ?>
+	              				  <input type="text" class="form-control" 
+	              				  id="<?php echo $_feedUrl['tkey'] ?>"
+	              				  name="<?php echo $_feedUrl['tkey'] ?>" 
+	              				  value="<?php echo $_feedUrl['storevalue'] ?>"
+	              				   placeholder="<?php echo $_feedUrl['placeholder'] ?>">        
+		                      <?php else: ?>
+		                    	  <input type="text" class="form-control"
+		                    	  	id="<?php echo $_feedUrl['tkey'] ?>"
+		                    	   name="<?php echo $_feedUrl['tkey'] ?>" placeholder="<?php echo $_feedUrl['placeholder'] ?>">
+		                      <?php endif; ?>
+		                 </div>
+	                   </div>
+					<?php endforeach; ?>
+
+              		<!--Enable/Disable feed upload-->
+              		<div class="row">
+              			<div class="col-sm-offset-2 col-sm-8" style="clear:both;">
+              				<label class="checkbox-inline" style="padding-left: 20px;">
+              				<?php if($this->isFeedUpload() != null && $this->isFeedUpload() == 'true'): ?>
+              				  <input type="checkbox" name="upload_feed" value="is_upload" checked>         
+	                    	<?php else: ?>
+	                    	  <input type="checkbox" name="upload_feed" value="is_upload">
+	                    	<?php endif; ?> 
+	                        	Upload Feed
+	                        </label>
+
+              			</div>
+              		</div>
+
+              		<!--Defining submit button-->
+              		<div style="text-align:center;margin:10px auto;">
+              			<input type="submit" class="btn btn-md btn-primary" name="feed_conf" value="Submit"
+              			 style="padding:5px; "/>
+              		</div>
+              	</form>
+              </fieldset>              
+            </div>
+        </div>          
+        <!-- Feed api configuration section end -->
+
+        <!-- search section start -->
+        <div id="searchConfSection" class="tab-pane fade">
+            <div style="margin-top:20px">
+            	<fieldset>
+            		<legend>Configure Search</legend>
+            		<form class="form-horizontal" action="<?php echo $this->getBaseUrl()."index.php/expertrec-feed/config/savesearch?secret=".$this->getSecret() ?>"  method="post" 
+            		role="form" target="_blank">
+            		    <!--Defining Search fields-->
+            		    <?php foreach ($this->getSearchFields() as $_searchFields): ?>
+		                   <div class="form-group">
+		                   	  <label class="control-label col-sm-2" for="search_<?php echo $_searchFields['tkey'] ?>"><?php echo $_searchFields['label'] ?>:</label>
+		                   	  <div class="col-sm-8">
+			                   	  <?php if(isset($_searchFields["storevalue"])): ?>
+		              				  <input type="text" class="form-control"
+		              				  name="<?php echo $_searchFields['tkey'] ?>" 
+		              				  id="search_<?php echo $_searchFields['tkey'] ?>"
+		              				  value="<?php echo $_searchFields['storevalue'] ?>"
+		              				   placeholder="<?php echo $_searchFields['placeholder'] ?>">        
+			                      <?php else: ?>
+			                    	  <input type="text" class="form-control" 
+			                    	  name="<?php echo $_searchFields['tkey'] ?>"
+			                    	  id="search_<?php echo $_searchFields['tkey'] ?>"
+			                    	  placeholder="<?php echo $_searchFields['placeholder'] ?>">
+			                      <?php endif; ?>
+			                 </div>
+		                   </div>
+					    <?php endforeach; ?>
+
+            		    <!--Defining checkbox section-->
+            		    <div class="form-group">
+            		    	<div class="col-sm-2"></div>
+            		    	<div class="col-sm-8">
+            		    		<?php foreach ($this->getSearchCheckedValues() as $_searchParams): ?>
+            		    		  <div class="col-sm-2">
+            		    		  	<div class="checkbox">
+            		    		  		<label>
+            		    		  			<input type="checkbox" name="search_check_list[]"
+            		    		  			 value="<?php echo $_searchParams['val'] ?>" 
+            		    		  			<?php echo $_searchParams['checked'] ?>>
+            		    		  			<?php echo $_searchParams['label'] ?>
+            		    		  		</label>
+            		    		  	</div>
+            		    		  </div>
+            		    		<?php endforeach; ?>
+
+            		        </div>
+            		    </div>
+
+	            		<!--Defining submit button-->
+	            		<div style="text-align:center;margin:10px auto;">
+	            			<input type="submit" class="btn btn-md btn-primary" name="selected_search" value="Submit" style="padding:5px; "/>
+	            		</div>
+            	    </form>
+            	</fieldset>              
+            </div>
+        </div>
+        <!-- search section ended-->
+
+        <!--site details section-->
+        <div id="siteDetailsSection" class="tab-pane fade">
+            <div style="margin-top:20px">
+              <fieldset>
+              	<legend>Site Info</legend>
+              	<table class="table table-hover" style="table-layout: fixed;">
+              		<tbody>
+              			<?php $siteDetails = $this->getSiteDetails();?>
+              			<?php $installedExtensions = $this->getInstalledExtensions(); ?>
+              			<?php $activeExtensions = $this->getActiveExtensions($installedExtensions['modulearr']); ?>           			
+
+              			<?php if(isset($siteDetails["adminName"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Admin name: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["adminName"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($siteDetails["adminEmail"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Admin email: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["adminEmail"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($siteDetails["salesName"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Sales name: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["salesName"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($siteDetails["salesEmail"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Sales email: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["salesEmail"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($siteDetails["secureUrl"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Web secure base URL: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["secureUrl"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($siteDetails["unsecureUrl"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Web unsecure base URL: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["unsecureUrl"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($siteDetails["baseCurrency"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Base currency: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["baseCurrency"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($siteDetails["defaultCurrency"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Default currency: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["defaultCurrency"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($siteDetails["allowCurrency"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Allowed currencies: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["allowCurrency"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($siteDetails["installedCurrency"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Installed currencies: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["installedCurrency"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($siteDetails["defaultCountry"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Default country: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["defaultCountry"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+						<?php if(isset($siteDetails["timezone"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Timezone: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $siteDetails["timezone"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>
+              			<?php if(isset($installedExtensions["modulestr"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Installed Extensions: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $installedExtensions["modulestr"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?> 
+              			<?php if(isset($installedExtensions["errorstr"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Installed Extensions(Error): </strong></td>
+              					<td style="color:red;word-wrap:break-word;"><?php echo $installedExtensions['errorstr'];?></td>
+              				</tr>
+              			<?php endif; ?>   
+              			<?php if(isset($activeExtensions["modulestr"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Active Extensions: </strong></td>
+              					<td style="word-wrap:break-word;">
+              						<?php echo $activeExtensions["modulestr"]; ?>
+              					</td>
+              				</tr>
+              			<?php endif; ?> 
+              			<?php if(isset($activeExtensions["errorstr"])): ?>
+              				<tr>
+              					<td style="width: 20%;"><strong>Active Extensions(Error): </strong></td>
+              					<td style="color:red;word-wrap:break-word;">
+              						<?php echo $activeExtensions['errorstr'];?>
+              					</td>
+              				</tr>
+              			<?php endif; ?>              				      				
+					</tbody>
+              	</table>
+              </fieldset>
+            </div>
+        </div>
+        <!--site details section ended-->
+    </div>
+</div>
