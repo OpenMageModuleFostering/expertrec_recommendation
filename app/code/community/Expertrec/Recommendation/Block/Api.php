@@ -119,7 +119,7 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
                 foreach ($stores as $oStore) {
                     $sid=$oStore->getId();
                     $websiteStoreRow = array();
-                    $apiUrl=$this->getBaseUrl().'index.php/expertrec-feed?secret='.$this->getSecret().'&cmd=export&wid='.$wid.'&sid='.$sid;
+                    $apiUrl=Mage::app()->getStore($sid)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB).'index.php/expertrec-feed?secret='.$this->getSecret().'&cmd=export&wid='.$wid.'&sid='.$sid;
                     // Display the store-website details with feed api
                    
                     $websiteStoreRow["wid"] = $wid;
@@ -129,13 +129,10 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
                     $websiteStoreRow["surl"] = $apiUrl;
                    
                     try{
-                        $collection=$feedFilter->addBasicFilter($website,$oStore)
-                                                               ->setPageSize(500);
-                        $pages = $collection->getLastPageNumber();
-                        $websiteStoreRow["pages"] = (string)$pages;
+                        $websiteStoreRow["pcount"] = Mage::helper('expertrec_recommendation')->getProductCount($wid,$sid);
 
                     }catch(Exception $e){
-                        $websiteStoreRow["pageerr"] = $e.getMessage();
+                        $websiteStoreRow["pcounterr"] = $e.getMessage();
                     }
 
                     array_push($websiteStoreData,$websiteStoreRow);                    

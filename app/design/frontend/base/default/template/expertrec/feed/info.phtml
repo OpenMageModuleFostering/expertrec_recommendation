@@ -87,7 +87,7 @@
 	                          <th>Website Name</th>
 	                          <th>Store ID</th>
 	                          <th>Store Name</th>
-	                          <th>Total Pages</th>
+	                          <th>Total# Products</th>
 	                          <th>Url</th>
 	                        </tr>
 	                    </thead>
@@ -97,15 +97,16 @@
 	                    	  	<td style="text-align:center;"><?php echo $_item['wid'] ?></td>
 	                    	    <td style="text-align:center;"><?php echo $_item['wname'] ?></td>
 	                    	    <td style="text-align:center;"><?php echo $_item['sid'] ?></td>
-	                    	    <?php if(isset($_item['pages'])): ?>
-	                    	        <td style="text-align:center;"><?php echo $_item['pages'] ?></td>
+	                    	    <td style="text-align:center;"><?php echo $_item['sname'] ?></td>
+	                    	    <?php if(isset($_item['pcount'])): ?>
+	                    	        <td style="text-align:center;"><?php echo $_item['pcount'] ?></td>
 	                    		<?php endif;?>
-	                    		<?php if(isset($_item['pageerr'])): ?>
+	                    		<?php if(isset($_item['pcounterr'])): ?>
 	                    		    <td style="text-align:center;"><b style="color:red;">Error: </b>
-	                    		    	<?php echo $_item['pageerr'] ?>
+	                    		    	<?php echo $_item['pcounterr'] ?>
 	                    		    </td>
-	                    	    <?php endif;?>	                    	    
-	                    	    <td style="text-align:center;"><?php echo $_item['sid'] ?></td>
+	                    	    <?php endif;?>    	    
+	                    	    
 	                    	    <td><a href = "<?php echo $_item['surl'] ?>"><?php echo $_item['surl'] ?></a></td>
 	                    	  </tr>
 							<?php endforeach; ?>
@@ -249,7 +250,7 @@
             		</form>
             	</fieldset>
             	<!--Displaying selected headers-->
-            	<?php if(!empty(Mage::getStoreConfig('expertrec/general/headers')) &&
+            	<?php if(!empty($storedHeaders) &&
             	isset($storedHeaders) && count($storedHeaders) > 0): ?>
 	            	<fieldset style="margin-top:20px;">
 	            	    <legend>Selected Headers</legend>

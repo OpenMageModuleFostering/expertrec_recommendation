@@ -1,7 +1,7 @@
 <?php
 
 class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_Action {
-      const BUILD_NO = "1486454605";
+      const BUILD_NO = "1487051832";
       private $_password;
 
        //main function which loads the feed API
