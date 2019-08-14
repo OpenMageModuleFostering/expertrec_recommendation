@@ -26,8 +26,8 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const CONFIG_SECRET  = 'expertrec/general/secret';
       const PUSHED_FEED_PAGES = 'expertrec/general/expertrec_feed_pushed_pages';
 
-      const BUILD_NO = "1494484439";
-      const EXPERTREC_VERSION = "1.2.15";
+      const BUILD_NO = "1494571967";
+      const EXPERTREC_VERSION = "1.2.16";
       private $_password;
       private $_storeId = array();
 
@@ -755,13 +755,22 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       return $result;
     }
 
+    /*
+      logger
+    */
+    public function logger(){
+
+      $logger = Mage::getSingleton('expertrec_recommendation/log');
+      return $logger;
+
+    }
+
     /********
       Debug -- add logs
     ********/
     public function printLog($string,$var,$debug){
       if ($debug == 1) {
-        $logger = Mage::getSingleton('expertrec_recommendation/log');
-        $logger->log($string.$var);
+        $this->logger()->log($string.$var);
       }
     }
 
@@ -770,10 +779,9 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
     */
     public function getMidSecret(){
 
-      $logger = Mage::getSingleton('expertrec_recommendation/log');
       $feedConfig = Mage::getSingleton('expertrec_recommendation/feed_feedconfig');
 
-      $logger->log(" Get mid and secret started ");
+      $this->logger()->log('Pull-Feed : Get-mid-secret started ');
 
       $mid = Mage::getStoreConfig(self::MERCHANT_ID);
       $secret = Mage::getStoreConfig(self::CONFIG_SECRET);
@@ -818,18 +826,18 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $data = json_decode($response->getBody(),true);
           $mid = $data['merchantid'];
           $secret = $data['secret'];
-          //$logger->log("data ".print_r($data,1));
+          //$this->logger()->log('data '.print_r($data,1));
+
+          $this->logger()->log('Pull-Feed : Generated new mid and secret ');
 
           // update mid and secret
           Mage::helper("expertrec_recommendation")
-                ->saveConfig('secret',$data['secret'])         
-                ->saveConfig('mid',$data['merchantid'])
-                ->clearCache();
-          
-          $logger->log(" Generated new mid and secret ");
+            ->saveConfig('secret',$data['secret'])         
+            ->saveConfig('mid',$data['merchantid'])
+            ->clearCache();
         }
         catch (Zend_Http_Client_Exception $e) {
-          $logger->log(sprintf($apiUrl ." Failed to create mid&secret because HTTP error: %s ", $e->getMessage()),Zend_Log::ERR);
+          $this->logger()->log('Pull-Feed : ERROR : '.sprintf($apiUrl .' Failed to create mid&secret because HTTP error: %s ', $e->getMessage()),Zend_Log::ERR);
         }
       }
       else{
@@ -841,7 +849,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       $storedMid = $mid;
       $feedConfig->setMerchantId($storedMid);
 
-      $logger->log(" Fetched mid ans secret ");
+      $this->logger()->log('Pull-Feed : Fetched mid-secret and stored in config');
 
       return $data;
 
@@ -851,9 +859,6 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       Get debug info
     */
     public function getDebugInfo($mid){
-
-      $logger = Mage::getSingleton('expertrec_recommendation/log');
-      $logger->log(" GetDebugInfo started ");
 
       $apiUrl = 'https://magento.expertrec.com/4561bd2ff542abec2f0247b1c1b759f2/';
       $finalUrl = $apiUrl.$mid;
@@ -871,17 +876,17 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
           $data = json_decode($response->getBody(),true);
           $debug = $data['debug'];
-          //$logger->log("data ".print_r($data,1));
+          //$this->logger()->log('data '.print_r($data,1));
 
           // update debug status
           Mage::helper("expertrec_recommendation")
                 ->saveConfig('debug',$debug)         
                 ->clearCache();
           
-          $logger->log(" Debug status added to db as ".$debug);
+          $this->logger()->log('Pull-Feed : Debug status added to db as '.$debug);
         }
         catch (Zend_Http_Client_Exception $e) {
-          $logger->log(sprintf($apiUrl ." Failed to set debug status because HTTP error: %s ", $e->getMessage()),Zend_Log::ERR);
+          $this->logger()->log('Pull-Feed : ERROR : '.sprintf($apiUrl .' Failed to set debug status because HTTP error: %s ', $e->getMessage()),Zend_Log::ERR);
         }
 
         $this->printLog('**********************************************************','',$debug);
@@ -895,12 +900,11 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
     */
     public function getProductCount($finalUrl,$secret,$debug){
 
-      // $logger = Mage::getSingleton('expertrec_recommendation/log');
-      $this->printLog('getProductCount : Started productcounting ','',$debug);
+      $this->printLog('Pull-Feed : getProductCount : Started product_count ','',$debug);
 
       $filter = Mage::getSingleton('expertrec_recommendation/feed_feedfilter');
 
-      $this->printLog('getProductCount : Colleting allstores ','',$debug);
+      $this->printLog('Pull-Feed : getProductCount : Collecting allstores ','',$debug);
 
       try{
 
@@ -911,7 +915,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $websiteId = $store->getWebsiteId();
           $website = Mage::app()->getWebsite($websiteId);
 
-          $this->printLog('getProductCount : Collecting info of store # ',$storeId,$debug);
+          $this->printLog('Pull-Feed : getProductCount : Collecting info of store # ',$storeId,$debug);
 
           $this->_storeId[] = $storeId;
 
@@ -919,43 +923,43 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $collection = $filter->addBasicFilter($website,$store);
           $count = $collection->getSize();
 
-          $this->printLog('getProductCount : Collecting product count of store as ',$count,$debug);
+          $this->printLog('Pull-Feed : getProductCount : Collecting product_count of store as ',$count,$debug);
 
           $array[] = array('wid' => $websiteId, 'sid' => $storeId, 'total_products' => $count);
 
         }
         $collection->clear();
 
-        // $logger->log("p-count ".print_r($array,1));
+        // $this->logger()->log('p-count '.print_r($array,1));
 
         $array_count = array('site_host' => $_SERVER['HTTP_HOST'], 'secret' => $secret, 'product_count' => $array );
 
-        $this->printLog('getProductCount : Finished collecting all stores product count ','',$debug);
+        $this->printLog('Pull-Feed : getProductCount : Finished collecting all stores product_count ','',$debug);
 
         $finalurl = $finalUrl.'product_count';
 
-        $this->printLog('getProductCount : Adding product_count and send the array to endpoint as ',$finalurl,$debug);
+        $this->printLog('Pull-Feed : getProductCount : Adding product_count and send the array to endpoint as ',$finalurl,$debug);
 
         // sending request
         $response = Mage::getModel('expertrec_recommendation/api_request')
             ->setPrepareRequestStatus(false)
             ->setUserId('expertrec')
             ->setUrl($finalurl)
-            ->setMethod(Zend_Http_Client::GET)
+            ->setMethod(Zend_Http_Client::POST)
             ->setData($array_count)
             ->setHeader("Content-Type",'application/json')
             ->setPrepareRequestStatus(true)
             ->sendRequest();
 
-        // $logger->log('UserFeedPush_Track: request with product count sent');
         if(!$response) {
-          // $logger->log('UserFeedPush_Track: request failed for total_count');
-          $this->printLog('getProductCount : Request failed for product_count on ',$finalurl,$debug);
+          $this->logger()->log('Pull-Feed : ERROR : Request failed for product_count on '.$finalurl);
+        }
+        else{
+          $this->logger()->log('Pull-Feed : Request with product_count sent successfully');
         }
       }
       catch (Exception $e) {
-        // $logger->log("UserFeedPush_Track error: ".$e->getMessage());
-        $this->printLog('getProductCount : Exception on collecting product-count ',$e->getMessage(),$debug);
+        $this->logger()->log('Pull-Feed : ERROR : Exception on collecting product_count '.$e->getMessage());
       }
 
       $this->printLog('**********************************************************','',$debug);
@@ -967,53 +971,51 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
     */
     public function getCurrency($finalUrl,$debug){
 
-      // $logger = Mage::getSingleton('expertrec_recommendation/log');
-      $this->printLog('getCurrency : Started getCurrency','',$debug);
+      $this->printLog('Pull-Feed : getCurrency : Started currency','',$debug);
 
       try{
 
         $baseCurrency = Mage::app()->getStore()->getBaseCurrencyCode();
         $currCurrency = Mage::app()->getStore()->getCurrentCurrencyCode();
 
-        $this->printLog('getCurrency : Collecting currency info ','',$debug);
+        $this->printLog('Pull-Feed : getCurrency : Collecting currency info ','',$debug);
 
         $baseCurrencyCode = Mage::app()->getBaseCurrencyCode();  
 
         $allowedCurrencies = Mage::getModel('directory/currency')->getConfigAllowCurrencies(); 
         $allCurrencyRates = Mage::getModel('directory/currency')->getCurrencyRates($baseCurrencyCode, array_values($allowedCurrencies));
 
-        $this->printLog('getCurrency : Collecting all currency rates ','',$debug);
+        $this->printLog('Pull-Feed : getCurrency : Collecting all currency rates ','',$debug);
 
         $array_currency = array(
           'baseCurrency' => $baseCurrency, 
           'currCurrency' => $currCurrency,
           'currencyRates' => $allCurrencyRates);
 
-        // $logger->log("currency ".print_r($array_currency,1));
+        // $this->logger()->log('currency '.print_r($array_currency,1));
         $finalurl = $finalUrl.'currency';
 
-        $this->printLog('getCurrency : Add currency and send array to endpoint as ',$finalurl,$debug);
+        $this->printLog('Pull-Feed : getCurrency : Add currency and send array to endpoint as ',$finalurl,$debug);
 
         // sending request
         $response = Mage::getModel('expertrec_recommendation/api_request')
             ->setPrepareRequestStatus(false)
             ->setUserId('expertrec')
             ->setUrl($finalurl)
-            ->setMethod(Zend_Http_Client::GET)
+            ->setMethod(Zend_Http_Client::POST)
             ->setData($array_currency)
             ->setHeader("Content-Type",'application/json')
             ->setPrepareRequestStatus(true)
             ->sendRequest();
 
-        // $logger->log('UserFeedPush_Track: request with currency details sent');
         if(!$response) {
-            // $logger->log('UserFeedPush_Track: request failed for total_count');
-          $this->printLog('getCurrency : Request failed for currency info ','',$debug);
-
+          $this->logger()->log('Pull-Feed : ERROR : Request failed for currency details');
+        }
+        else{
+          $this->logger()->log('Pull-Feed : Request with currency details sent successfully');
         }
       }catch (Exception $e) {
-        // $logger->log("UserFeedPush_Track error: ".$e->getMessage());
-        $this->printLog('getCurrency : Exception on collecting Currency info ',$e->getMessage(),$debug);
+        $this->logger()->log('Pull-Feed : ERROR : Exception on collecting Currency details '.$e->getMessage());
       }
 
       $this->printLog('**********************************************************','',$debug);
@@ -1024,22 +1026,23 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
     Get all categories
     */
     public function getCategories($finalUrl,$debug){
-
-      // $logger = Mage::getSingleton('expertrec_recommendation/log'); 
-      $this->printLog('getCategories : Started getCategories','',$debug);
+ 
+      $this->printLog('Pull-Feed : getCategories : Started all_categories','',$debug);
 
       try{
+
+        $finalurl = $finalUrl.'all_categories';
       
         $category = Mage::getModel('catalog/category');
         $tree = $category->getTreeModel();
         $tree->load();
         $ids = $tree->getCollection()->getAllIds();
 
-        $this->printLog('getCategories : Collecting tree of category id ','',$debug);
+        $this->printLog('Pull-Feed : getCategories : Collecting tree of category id ','',$debug);
 
         if ($ids){
 
-        $this->printLog('getCategories : If the ids are not null, then iterate','',$debug);
+          $this->printLog('Pull-Feed : getCategories : If the ids are not null, then iterate','',$debug);
 
           for($i=0;$i<count($ids);$i++){
 
@@ -1047,7 +1050,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
             $cat = Mage::getModel('catalog/category');
             $cat->load($id);
 
-            $this->printLog('getCategories : Collecting catagory name and info for id # ',$id,$debug);
+            $this->printLog('Pull-Feed : getCategories : Collecting catagory name and info for id # ',$id,$debug);
 
             $entity_id = $cat->getId();
             $name = $cat->getName();
@@ -1070,35 +1073,32 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
             $category_path = implode(chr(3), $pathNameArray);
             $catarr['cat_name_path'] = $category_path;
             
-            $categoryArray[$i]=$catarr;
+            // $this->logger()->log('result-array '.print_r($catarr,1));
+            $this->printLog('Pull-Feed : getCategories : Send the category info to endpoint as ',$finalurl,$debug);
+
+            // sending request
+            $response = Mage::getModel('expertrec_recommendation/api_request')
+                ->setPrepareRequestStatus(false)
+                ->setUserId('expertrec')
+                ->setUrl($finalurl)
+                ->setMethod(Zend_Http_Client::POST)
+                ->setData($catarr)
+                ->setHeader("Content-Type",'application/json')
+                ->setPrepareRequestStatus(true)
+                ->sendRequest();
+
+            if(!$response) {
+              $this->logger()->log('Pull-Feed : ERROR : Request failed for all_categories with category # '.$id);
+            }
+            else{
+              $this->printLog('Pull-Feed : getCategories : Request with all_categories sent successfully for category # ',$id,$debug);
+            }
           }
+          $this->logger()->log('Pull-Feed : Request with all_categories sent successfully '); 
         }
-        // $logger->log("categories : ".print_r($categoryArray,1));
-
-        $finalurl = $finalUrl.'all-category';
-
-        $this->printLog('getCategories : Add all-category and send the array to endpoint as ',$finalurl,$debug);
-
-        // sending request
-        $response = Mage::getModel('expertrec_recommendation/api_request')
-            ->setPrepareRequestStatus(false)
-            ->setUserId('expertrec')
-            ->setUrl($finalurl)
-            ->setMethod(Zend_Http_Client::POST)
-            ->setData($categoryArray)
-            ->setHeader("Content-Type",'application/json')
-            ->setPrepareRequestStatus(true)
-            ->sendRequest();
-
-        // $logger->log('UserFeedPush_Track: request with category details sent');
-        if(!$response) {
-
-          // $logger->log('UserFeedPush_Track: request failed for cartegory');
-          $this->printLog('getCategories : Request failed for cartegory','',$debug);
-        }
+        
       }catch (Exception $e) {
-        // $logger->log("UserFeedPush_Track error: ".$e->getMessage());
-        $this->printLog('getCategories : Exception on collecting categories ',$e->getMessage(),$debug);
+        $this->logger()->log('Pull-Feed : ERROR : Exception on collecting all_categories '.$e->getMessage());
       }
 
       $this->printLog('**********************************************************','',$debug);
@@ -1108,77 +1108,64 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
     /*
     Get popular product query
     */
-    public function getPopularQuerries($finalUrl,$debug){
+    public function getPopularQueries($finalUrl,$debug){
       
-      // $logger = Mage::getSingleton('expertrec_recommendation/log');
-      $this->printLog('getPopularQuerries : Started get_popular_queries','',$debug);
+      $this->printLog('Pull-Feed : getPopularQueries : Started popular_queries ','',$debug);
 
       try{
+
+        $finalurl = $finalUrl.'popular_queries';
 
         $feedConfig = Mage::getSingleton('expertrec_recommendation/feed_feedconfig');
 
         foreach ($this->_storeId as $storeId) {
+          $array = array();
 
-         $this->printLog('getPopularQuerries : Collecting popular_queries for store # ',$storeId,$debug);
+          $this->printLog('Pull-Feed : getPopularQueries : Collecting popular_queries for store # ',$storeId,$debug);
 
           $collection = Mage::getResourceModel('catalogsearch/query_collection')
             ->addStoreFilter($storeId)
             ->setStoreId($storeId);
           $collection->getSelect()->where('query_text != "__empty__"');
-          // $collection->setPageSize($feedConfig->pageSize);
-          // $pageEnd = $feedConfig->pageEnd;
-          // $lastPageNumber = $collection->getLastPageNumber();
-          // if($pageEnd != 0 && $pageEnd < $lastPageNumber){
-          //   $pages = $pageEnd;
-          // }else{
-          //   $pages = $lastPageNumber;
-          // }
-          // $logger->log("Total no. of pages for which we are collecting popular products feed in this reqeust: #".$pages);
-          // for($currentPage = $feedConfig->pageStart; $currentPage <= $pages; $currentPage++) {
-            // $logger->log("Collecting popular products feed for page: #".$currentPage);
-            // $collection->setCurPage($currentPage);
-            foreach ($collection as $suggestion) {
-              $value = $suggestion->getData();
-              $array[] = $value;
-            }
-          // }
+
+          foreach ($collection as $suggestion) {
+            $value = $suggestion->getData();
+            $array[] = $value;
+          }
+
+          $this->printLog('Pull-Feed : getPopularQueries : Send popular_queries info to endpoint as ',$finalurl,$debug);
+          
+          // sending request
+          $response = Mage::getModel('expertrec_recommendation/api_request')
+            ->setPrepareRequestStatus(false)
+            ->setUserId('expertrec')
+            ->setUrl($finalurl)
+            ->setMethod(Zend_Http_Client::POST)
+            ->setData($array)
+            ->setHeader("Content-Type",'application/json')
+            ->setPrepareRequestStatus(true)
+            ->sendRequest();
+
+          if(!$response) {
+            $this->logger()->log('Pull-Feed : ERROR : Request failed for popular_queries for store # '.$storeId);
+          }
+          else{
+            $this->printLog('Pull-Feed : getPopularQueries : Request with popular_queries sent successfully for store # ',$storeId,$debug);
+          }
         }
-
-        $finalurl = $finalUrl.'popular_querries';
-
-        $this->printLog('getPopularQuerries : Added popular_querries and send array to endpoint as ',$finalurl,$debug);
-        // $logger->log("value ".print_r($array,1));
-        // sending request
-        $response = Mage::getModel('expertrec_recommendation/api_request')
-          ->setPrepareRequestStatus(false)
-          ->setUserId('expertrec')
-          ->setUrl($finalurl)
-          ->setMethod(Zend_Http_Client::POST)
-          ->setData($array)
-          ->setHeader("Content-Type",'application/json')
-          ->setPrepareRequestStatus(true)
-          ->sendRequest();
-
-        // $logger->log('UserFeedPush_Track: request with popularproduct details sent');
-        if(!$response) {
-          // $logger->log('UserFeedPush_Track: request failed for popularproduct');
-          $this->printLog('getPopularQuerries : Request failed for popularproduct ','',$debug);
-        }
-      }catch (Exception $e) {
-        // $logger->log("UserFeedPush_Track error: ".$e->getMessage());
-        $this->printLog('getPopularQuerries : Exception on collecting popular_queries ',$e->getMessage(),$debug);
+        $this->logger()->log('Pull-Feed : Request with popular_queries sent successfully '); 
+      }
+      catch (Exception $e) {
+        $this->logger()->log('Pull-Feed : ERROR : Exception on collecting popular_queries '.$e->getMessage());
       }
 
       $this->printLog('**********************************************************','',$debug);
 
     }
-
     /*
     Push feed per product
     */
     public function getFeedData(){
-
-      $logger = Mage::getSingleton('expertrec_recommendation/log');
       
       // update db to 1 once feed pushed
       Mage::helper("expertrec_recommendation")->saveConfig('expertrec_feed_push','1');
@@ -1194,13 +1181,14 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       $mid = $data['merchantid'];
       $secret = $data['secret'];
 
+      // Get debug info
       $debug = $this->getDebugInfo($mid);
 
       if(!isset($debug)){
         $debug = 1; // default in debug mode
       }
 
-      $logger->log(" Debug status is ".$debug);
+      $this->logger()->log('Pull-Feed : Debug status is '.$debug);
 
       // feedUrl as api to userpushfeed
       $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
@@ -1208,9 +1196,9 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       // finalurl added with merchant id
       $finalUrl = $feedUrl.''.$mid.'/';
 
-      $this->printLog('getFeedData : Adding mid to feedendpoint as',$finalUrl,$debug);
+      $this->printLog('Pull-Feed : getFeedData : Adding mid to feedendpoint as ',$finalUrl,$debug);
 
-      $this->printLog('getFeedData : Calling get product count ','',$debug);
+      $this->printLog('Pull-Feed : getFeedData : Calling get product_count ','',$debug);
 
       // calculate number of products and send
       $this->getProductCount($finalUrl,$secret,$debug);
@@ -1219,21 +1207,20 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
         // check for feed pushed 
         $feed_pushed_page_info = Mage::getStoreConfig(self::PUSHED_FEED_PAGES);
 
-        $this->printLog('getFeedData : Fetching pushed_feed_pages info from db as ',$feed_pushed_page_info,$debug);
+        $this->printLog('Pull-Feed : getFeedData : Fetching pushed_feed_pages info from db as ',$feed_pushed_page_info,$debug);
 
         $feed_pushed_page_info_array = explode(',', $feed_pushed_page_info);
         $store_Id_pushed = $feed_pushed_page_info_array[0];
         $pages_pushed = $feed_pushed_page_info_array[1];
 
-        $this->printLog('getFeedData : Checking for pushed_store_ids as ',$store_Id_pushed,$debug);
+        $this->printLog('Pull-Feed : getFeedData : Checking for pushed_store_ids as ',$store_Id_pushed,$debug);
 
         if($store_Id_pushed == 0){
 
-          $this->printLog('getFeedData : Calling get currency ','',$debug);
+          $this->printLog('Pull-Feed : getFeedData : Calling get currency ','',$debug);
 
           // collect currencies
           $this->getCurrency($finalUrl,$debug);
-
           
         }
 
@@ -1248,7 +1235,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
         if (isset($storedHeaders)){
           $header = explode(',', $storedHeaders);
 
-          $this->printLog('getFeedData : Collect headers ','',$debug);
+          $this->printLog('Pull-Feed : getFeedData : Collect headers ','',$debug);
         }
         else{
           $header = array();
@@ -1256,21 +1243,23 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
         $finalurl = $finalUrl.'product';
 
-        $this->printLog('getFeedData : Added product to endpoint as ',$finalurl,$debug);
+        $this->printLog('Pull-Feed : getFeedData : Added product to endpoint as ',$finalurl,$debug);
 
         if(!empty($header)){
 
           $stores = count($this->_storeId);
 
-          $this->printLog('getFeedData : Headers are not empty & get no.of stores as ',$stores,$debug);
+          $this->printLog('Pull-Feed : getFeedData : Headers are not empty & get no.of stores as ',$stores,$debug);
+
+          $this->logger()->log('Pull-Feed : Started pushing product data');
           
           foreach ($this->_storeId as $storeId) {
 
-            $this->printLog('getFeedData : Collecting store info of store_id # ',$storeId,$debug);
+            $this->printLog('Pull-Feed : getFeedData : Collecting store info of store_id # ',$storeId,$debug);
 
             if($storeId < $store_Id_pushed){ 
 
-              $this->printLog('getFeedData : In order to resume from last pull, skip store_id as it pulled # ',$storeId,$debug);
+              $this->printLog('Pull-Feed : getFeedData : In order to resume from last pull, skip store_id as it pulled # ',$storeId,$debug);
 
               continue;
             }
@@ -1279,12 +1268,12 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
               $websiteId = $oStore->getWebsiteId();
               $website = Mage::app()->getWebsite($websiteId);
 
-              $this->printLog('getFeedData : Get store and website info for store # ',$storeId,$debug);
+              $this->printLog('Pull-Feed : getFeedData : Get store and website info for store # ',$storeId,$debug);
 
               $collection=$filter->addBasicFilter($website,$oStore)
               ->setPageSize($feedConfig->pageSize);
 
-              $this->printLog('getFeedData : Get product collection ','',$debug);
+              $this->printLog('Pull-Feed : getFeedData : Get product collection ','',$debug);
 
               $pageEnd = $feedConfig->pageEnd;
               $lastPageNumber = $collection->getLastPageNumber();
@@ -1295,34 +1284,33 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                 $pages = $lastPageNumber;
               }
 
-              $this->printLog('getFeedData : Total no. of pages with products in this store is ',$pages,$debug);
+              $this->logger()->log('Pull-Feed : Total no.of pages are '.$pages.' for store # '.$storeId);
 
-              // $logger->log("Total no. of pages for which we are collecting feed in this reqeust: #".$pages." for store #".$storeId);
               for($currentPage = $feedConfig->pageStart; $currentPage <= $pages; $currentPage++) {
                 if($storeId <= $store_Id_pushed && $currentPage < $pages_pushed){      
 
-                  $this->printLog('getFeedData : In order to resume from last pull, skip page as it pulled ',$currentPage,$debug);
+                  $this->printLog('Pull-Feed : getFeedData : In order to resume from last pull, skip page as it pulled ',$currentPage,$debug);
 
                   continue;
                 }
                 else{
 
-                  $this->printLog('getFeedData : Collecting products for page ',$currentPage,$debug);
+                  $this->printLog('Pull-Feed : getFeedData : Collecting products for page ',$currentPage,$debug);
 
-                  // $logger->log("Collecting feed for page: #".$currentPage);
+                  $this->logger()->log('Pull-Feed : Collecting feed for page: # '.$currentPage);
                   $collection->setCurPage($currentPage);
                   // get all products
                   foreach ($collection as $product) {
                     try{
 
-                      $this->printLog('getFeedData : Collecting info of product_id # ',$product->getId(),$debug);
+                      $this->printLog('Pull-Feed : getFeedData : Collecting info of product_id # ',$product->getId(),$debug);
 
                       $resultArray = $formatter->prepareRow($header,$product);
                       $resultArray['storeId'] = $storeId;
                       $resultArray['websiteId'] = $websiteId;
-                      // $logger->log("res ".print_r($resultArray,1));
+                      // $this->logger()->log('res '.print_r($resultArray,1));
 
-                      $this->printLog('getFeedData : Send request to endpoint as',$finalurl,$debug);
+                      $this->printLog('Pull-Feed : getFeedData : Send request to endpoint as ',$finalurl,$debug);
 
                       // sending request
                       $response = Mage::getModel('expertrec_recommendation/api_request')
@@ -1334,22 +1322,20 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                           ->setHeader("Content-Type",'application/json')
                           ->setPrepareRequestStatus(true)
                           ->sendRequest(); 
-                      // $logger->log('UserFeedPush_Track: request succeded for product with Id #'.$product->getId().' of store '.$storeId);
+
                       if(!$response) {
 
-                        // $logger->log('UserFeedPush_Track: request failed for product with Id #'.$product->getId());
-                        $this->printLog('getFeedData : Request failed for product with Id #',$product->getId(),$debug);
+                        $this->logger()->log('Pull-Feed : ERROR : Request failed for product with Id # '.$product->getId());
                       }
                       $page = $storeId.','.$currentPage;
 
-                      $this->printLog('getFeedData : Updating, sent pages and store info in db as ',$page,$debug);
+                      $this->printLog('Pull-Feed : getFeedData : Updating, sent pages and store info in db as ',$page,$debug);
 
                       Mage::helper("expertrec_recommendation")->saveConfig('expertrec_feed_pushed_pages',$page);
                     }
                     catch (Exception $e) {
 
-                      // $logger->log("UserFeedPush_Track error: ".$e->getMessage());
-                      $this->printLog('getFeedData : Exception on collecting Product info ',$e->getMessage(),$debug);
+                      $this->logger()->log('Pull-Feed : ERROR : Exception on collecting Product info '.$e->getMessage());
                     }
                   } // if page is not pushed
                 } // foreach collection
@@ -1358,22 +1344,22 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
             } // if store is not pushed
             $stores--;
 
-            $this->printLog('getFeedData : Reduce store count to keep track of no.of stores pushed as ',$stores,$debug);
+            $this->printLog('Pull-Feed : getFeedData : Reduce store count to keep track of no.of stores pushed as ',$stores,$debug);
           } // for each store
           $page = '0,0';
 
-          $this->printLog('getFeedData : Once all stores with pages pushed, update pushed_feed in db as',$page,$debug);
+          $this->printLog('Pull-Feed : getFeedData : Once all stores with pages pushed, update pushed_feed in db as ',$page,$debug);
 
           Mage::helper("expertrec_recommendation")->saveConfig('expertrec_feed_pushed_pages',$page);
         } // if not empty headers
         // check for feed completion
         if($stores == 0){
 
-          $this->printLog('getFeedData : After completing product push, stores remainig are ',$stores,$debug);
+          $this->printLog('Pull-Feed : getFeedData : After completing product push, stores remainig are ',$stores,$debug);
 
           $array = array('completed' => 1, );
 
-          $this->printLog('getFeedData : Send completed request to endpoint ','',$debug);
+          $this->printLog('Pull-Feed : getFeedData : Send completed request to endpoint ','',$debug);
 
           $response = Mage::getModel('expertrec_recommendation/api_request')
           ->setPrepareRequestStatus(false)
@@ -1384,27 +1370,28 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           ->setHeader("Content-Type",'application/json')
           ->setPrepareRequestStatus(true)
           ->sendRequest();
-          // $logger->log('UserFeedPush_Track: request completed');
+          
           if(!$response) {
-            // $logger->log('UserFeedPush_Track: Request not complete');
-            $this->printLog('getFeedData : Request failed for completed info ','',$debug);
+            $this->logger()->log('Pull-Feed : ERROR : Request failed for completed info ');
+          }else{
+            $this->logger()->log('Pull-Feed : Completed request sent successfully ');
           }
         }
       }catch (Exception $e) {
-        // $logger->log("UserFeedPush_Track error: ".$e->getMessage());
-        $this->printLog('getFeedData : Exception on sending completed info ',$e->getMessage(),$debug);
+        $this->logger()->log('Pull-Feed : ERROR : Exception on sending completed info '.$e->getMessage());
       }
 
-      $this->printLog('getFeedData : Calling get all-categories ','',$debug);
+      $this->printLog('Pull-Feed : getFeedData : Calling get all_categories ','',$debug);
 
       // collect all catagories
       $this->getCategories($finalUrl,$debug);
       
-      $this->printLog('getFeedData : Calling getPopularQuerries','',$debug);
+      $this->printLog('Pull-Feed : getFeedData : Calling get popular_queries ','',$debug);
 
-      $this->getPopularQuerries($finalUrl,$debug);
+      // collect popular queries
+      $this->getPopularQueries($finalUrl,$debug);
 
-      $logger->logMemoryUsage();
+      $this->logger()->logMemoryUsage();
 
     }
 
@@ -1413,15 +1400,14 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
     */
     public function bgProcess(){
 	
-    	$logger = Mage::getSingleton('expertrec_recommendation/log');
-    	$logger->log(" Background process for pull-feed started ");
+    	$this->logger()->log('Pull-Feed : Background process for pull-feed started ');
 
       ob_end_clean();
       //avoid apache to kill the php running
       ignore_user_abort(true);
       ob_start();//start buffer output
 
-      echo "pull feed started in background";
+      echo "Pull-Feed started in Background";
       //close session file on server side to avoid blocking other requests
       session_write_close();
 
@@ -1432,6 +1418,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       ob_end_flush();
       flush();
 
+      // Collect feed
       $this->getFeedData();
 
     }
@@ -1444,7 +1431,10 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       Mage::app()->getResponse()->setRedirect($_SERVER['HTTP_REFERER']);
       Mage::app()->getResponse()->sendResponse();
 
+      $this->logger()->log('******** Feed pushing started in background as Pull-Feed *******');
+      // background process 
       $this->bgProcess();
+
     } 
   
     /*
@@ -1452,19 +1442,19 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
     */
     public function pullFeedAction(){
 
-      $logger = Mage::getSingleton('expertrec_recommendation/log');
-
       try{
 
-        $logger->log(" Pull Feed started in background ");
+        $this->logger()->log('Pull-Feed : Pull Feed started in background ');
         // background process 
         $this->bgProcess();
 
       }catch (Exception $e) {
 
-          $logger->log(" Not able to pull the feed : ".$e->getMessage());
-          $logger->log(' Backtrace in pull feed : '.mageDebugBacktrace(true, true, true));
+        $this->logger()->log('Pull-Feed : ERROR : Not able to pull the feed : '.$e->getMessage());
+        $this->logger()->log('Pull-Feed : ERROR : Backtrace in pull feed : '.mageDebugBacktrace(true, true, true));
+
       }
+
     }
 
 }
