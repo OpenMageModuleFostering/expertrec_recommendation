@@ -11,7 +11,7 @@
 
   $mage_ver = Mage::getVersion();
   $php_ver = phpversion();
-  $expertrec_version = "1.2.20";
+  $expertrec_version = "1.2.21";
   
   $installer->startSetup();
 

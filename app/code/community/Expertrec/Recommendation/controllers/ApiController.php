@@ -26,8 +26,8 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const CONFIG_SECRET  = 'expertrec/general/secret';
       const PUSHED_FEED_PAGES = 'expertrec/general/expertrec_feed_pushed_pages';
 
-      const BUILD_NO = "1496109923";
-      const EXPERTREC_VERSION = "1.2.20";
+      const BUILD_NO = "1497865310";
+      const EXPERTREC_VERSION = "1.2.21";
       private $_password;
       private $_storeId = array();
 
@@ -1045,8 +1045,11 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
           $root_category = Mage::getModel('catalog/category')->load($rootCategoryId); 
 
+          //Mage::log(print_r($root_category->getImageUrl(),1));
+
           $catarr['categoryId'] = $root_category->getId();
           $catarr['categoryName'] = $root_category->getName();
+          $catarr['categoryStatus'] = $root_category->getIsActive();
             // $category_id_path = $category->getPath();
 
           $store = Mage::app()->getStore($storeId);
@@ -1091,10 +1094,10 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
               ->sendRequest();
 
           if(!$response) {
-            $this->logger()->log('Pull-Feed : ERROR : Request failed for all_categories with category # '.$catarr['cat_id']);
+            $this->logger()->log('Pull-Feed : ERROR : Request failed for all_categories with category # '.$catarr['categoryId']);
           }
           else{
-            $this->printLog('Pull-Feed : getCategories : Request with all_categories sent successfully for category # ',$catarr['cat_id'],$debug);
+            $this->printLog('Pull-Feed : getCategories : Request with all_categories sent successfully for category # ',$catarr['categoryId'],$debug);
           }
 
           $categories = Mage::getModel('catalog/category')
@@ -1102,19 +1105,32 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
             ->setStoreId($storeId)
             ->addFieldToFilter('is_active', 1)
             ->addAttributeToFilter('path', array('like' => "1/{$rootCategoryId}/%"))
+            //->addAttributeToSelect('image')
             ->addAttributeToSelect('*');
 
           foreach($categories as $category){
             $catarr=array();
             $catarr['categoryId'] = $category->getId();
             $catarr['categoryName'] = $category->getName();
+            // Adding status to know the active status of category 
+            $catarr['categoryStatus'] = $category->getIsActive();
 
             $category_url = $store->getBaseUrl().$category->getUrlPath();
 
             $catarr['categoryUrl'] = $category_url;
             // $category_id_path = $category->getPath();
 
-            $this->printLog('Pull-Feed : getCategories : Collecting catagory name and info for cat_id # ',$catarr['cat_id'],$debug);
+            // $image_parsed_url = parse_url($category->getImageUrl());
+            // $image_url_path = substr($image_parsed_url['path'], 1);
+            // $image_store_url =$store->getBaseUrl().$image_url_path;
+
+            // if($image_url_path != ''){
+            //   $catarr['categoryImage'] = $image_store_url;
+            // }else{
+            //   $catarr['categoryImage'] = 'No image';
+            // }
+
+            $this->printLog('Pull-Feed : getCategories : Collecting catagory name and info for cat_id # ',$catarr['categoryId'],$debug);
           
             $pathIdArray = explode('/', $category->getPath());
             $pathNameArray = array();
@@ -1147,10 +1163,10 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                 ->sendRequest();
 
             if(!$response) {
-              $this->logger()->log('Pull-Feed : ERROR : Request failed for all_categories with category # '.$catarr['cat_id']);
+              $this->logger()->log('Pull-Feed : ERROR : Request failed for all_categories with category # '.$catarr['categoryId']);
             }
             else{
-              $this->printLog('Pull-Feed : getCategories : Request with all_categories sent successfully for category # ',$catarr['cat_id'],$debug);
+              $this->printLog('Pull-Feed : getCategories : Request with all_categories sent successfully for category # ',$catarr['categoryId'],$debug);
             }
           }
         }

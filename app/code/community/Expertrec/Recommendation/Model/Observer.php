@@ -222,34 +222,50 @@ class Expertrec_Recommendation_Model_Observer {
             return $this;
         }
 
-        //sending request
-        $response = Mage::getModel('expertrec_recommendation/api_request')
-            ->setPrepareRequestStatus(false)
-            ->setUserId('expertrec')
-            ->setUrl($finalUrl)
-            ->setMethod(Zend_Http_Client::DELETE)
-            ->setData(array('item' => $product->getId()))
-            ->setPrepareRequestStatus(true)
-            ->sendRequest();
+        $storeIds = $product->getStoreIds();
+        if(!empty($storeIds)){
 
-        $mid = Mage::getStoreConfig(self::MERCHANT_ID);
-        $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
-        $finalUrl = $feedUrl.''.$mid.'/';
+            foreach($storeIds as $storeId){
+                $productId = $product->getId();
 
-        //sending request
-        $response = Mage::getModel('expertrec_recommendation/api_request')
-            ->setPrepareRequestStatus(false)
-            ->setUserId('expertrec')
-            ->setUrl($finalUrl)
-            ->setMethod(Zend_Http_Client::DELETE)
-            ->setData(array('item' => $product->getId()))
-            ->setPrepareRequestStatus(true)
-            ->sendRequest();
+                $store = Mage::app()->getStore($storeId);
 
-        
-        if(!$response) {
-            $logger->log('DeleteCatalogProduct_Track: request failed for product with Id #'.$product->getId());
+                $websiteId = $store->getWebsiteId();
+                $website = Mage::app()->getWebsite($websiteId);
+
+                $delete_array = array('entity_id' => $productId,'sid' => $storeId,'wid' => $websiteId);
+
+                //sending request
+                $response = Mage::getModel('expertrec_recommendation/api_request')
+                    ->setPrepareRequestStatus(false)
+                    ->setUserId('expertrec')
+                    ->setUrl($finalUrl)
+                    ->setMethod(Zend_Http_Client::DELETE)
+                    ->setData($delete_array)
+                    ->setPrepareRequestStatus(true)
+                    ->sendRequest();
+
+                $mid = Mage::getStoreConfig(self::MERCHANT_ID);
+                $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
+                $finalUrl = $feedUrl.''.$mid.'/';
+
+                //sending request
+                $response = Mage::getModel('expertrec_recommendation/api_request')
+                    ->setPrepareRequestStatus(false)
+                    ->setUserId('expertrec')
+                    ->setUrl($finalUrl)
+                    ->setMethod(Zend_Http_Client::DELETE)
+                    ->setData($delete_array)
+                    ->setPrepareRequestStatus(true)
+                    ->sendRequest();
+
+                
+                if(!$response) {
+                    $logger->log('DeleteCatalogProduct_Track: request failed for product with Id #'.$product->getId());
+                }
+            }
         }
+
 
         return $this;
     }
@@ -519,85 +535,179 @@ class Expertrec_Recommendation_Model_Observer {
 
         $storeId = $category_data['store_id'];
 
-        $store = Mage::app()->getStore($storeId);
+        if($storeId == 0){
+            $storeIds = $category->getStoreIds();
+            foreach($storeIds as $storeIdd){
+                if($storeIdd != 0){
+                    $store = Mage::app()->getStore($storeIdd);
 
-        $websiteId = $store->getWebsiteId();
+                    $websiteId = $store->getWebsiteId();
 
-        $category->setStoreId($storeId);
+                    $category->setStoreId($storeIdd);
 
-        // get category url
-        $category_url = $store->getBaseUrl().$category->getUrlPath();
+                    // get category url
+                    $category_url = $store->getBaseUrl().$category->getUrlPath();
 
-        $category_id = $category->getId();
-		$logger->log("saved Category for # ".$category_id);
-        $category_name = $category->getName();
+                    $category_id = $category->getId();
+                    $logger->log("saved Category for # ".$category_id);
+                    $category_name = $category->getName();
+                    $category_status = $category->getIsActive();
 
-        // get path with name
-        $pathIdArray = explode('/', $category->getPath());
-        // $storeId = $store->getId();
-        $pathNameArray = array();
+                    // get path with name
+                    $pathIdArray = explode('/', $category->getPath());
+                    // $storeId = $store->getId();
+                    $pathNameArray = array();
 
-        for($i=0;$i<count($pathIdArray);$i++){
-            $categoryy = Mage::getModel('catalog/category');
-            $categoryy->setStoreId($storeId);
-            $categoryy->load($pathIdArray[$i]);
-            $pathNameArray[$i] = $categoryy->getName();
+                    for($i=0;$i<count($pathIdArray);$i++){
+                        $categoryy = Mage::getModel('catalog/category');
+                        $categoryy->setStoreId($storeIdd);
+                        $categoryy->load($pathIdArray[$i]);
+                        $pathNameArray[$i] = $categoryy->getName();
+                    }
+                    // if($category->getName() == ''){
+                    //     $categoryy = Mage::getModel('catalog/category')->load($category->getId());
+                    //     $category_name = $categoryy->getName();
+                    // }
+                    //removing Root catalog which is $pathNameArrray[0]
+                    // array_shift($pathNameArray);
+                    $category_path = implode('/', $pathNameArray);
+
+                    // array_shift($pathIdArray);
+                    $category_id_path = implode('/', $pathIdArray);
+
+                    $categoryArray = array('categoryId' => $category_id,
+                                           'categoryName' => $category_name,
+                                           'categoryStatus' => $category_status,
+                                           'categoryIdPath' => $category_id_path,
+                                           'categoryNamePath' => $category_path,
+                                           'categoryUrl' => $category_url,
+                                           'sid' => $storeIdd,
+                                           'wid' => $websiteId);
+
+                    //$logger->log("array ".print_r($categoryArray,1));
+                    // passing category to identify category url
+                    $feedUrl = $this->getFeedEndpoint();
+                    $finalUrl = $feedUrl.'/category';
+                    if(empty($finalUrl)){
+                        return $this;
+                    }
+
+                    //sending request
+                    $response = Mage::getModel('expertrec_recommendation/api_request')
+                        ->setPrepareRequestStatus(false)
+                        ->setUserId('expertrec')
+                        ->setUrl($finalUrl)
+                        ->setMethod(Zend_Http_Client::POST)
+                        ->setData($categoryArray)
+                        ->setHeader("Content-Type",'application/json')
+                        ->setPrepareRequestStatus(true)
+                        ->sendRequest();
+
+                    $mid = Mage::getStoreConfig(self::MERCHANT_ID);
+                    $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
+                    $finalUrl = $feedUrl.''.$mid.'/category';
+                            
+                    //sending request
+                    $response = Mage::getModel('expertrec_recommendation/api_request')
+                        ->setPrepareRequestStatus(false)
+                        ->setUserId('expertrec')
+                        ->setUrl($finalUrl)
+                        ->setMethod(Zend_Http_Client::POST)
+                        ->setData($categoryArray)
+                        ->setHeader("Content-Type",'application/json')
+                        ->setPrepareRequestStatus(true)
+                        ->sendRequest();
+
+                    if(!$response) {
+                        $logger->log('request failed for category with Id #'.$category->getId());
+                    }
+                }
+            }
         }
-        // if($category->getName() == ''){
-        //     $categoryy = Mage::getModel('catalog/category')->load($category->getId());
-        //     $category_name = $categoryy->getName();
-        // }
-        //removing Root catalog which is $pathNameArrray[0]
-        // array_shift($pathNameArray);
-        $category_path = implode('/', $pathNameArray);
 
-        // array_shift($pathIdArray);
-        $category_id_path = implode('/', $pathIdArray);
+        else{
+            $store = Mage::app()->getStore($storeId);
 
-        $categoryArray = array('categoryId' => $category_id,
-                               'categoryName' => $category_name,
-                               'categoryIdPath' => $category_id_path,
-                               'categoryNamePath' => $category_path,
-                               'categoryUrl' => $category_url,
-                               'sid' => $storeId,
-                               'wid' => $websiteId);
+            $websiteId = $store->getWebsiteId();
 
-        //$logger->log("array ".print_r($categoryArray,1));
-        // passing category to identify category url
-        $feedUrl = $this->getFeedEndpoint();
-        $finalUrl = $feedUrl.'/category';
-        if(empty($finalUrl)){
-            return $this;
-        }
+            $category->setStoreId($storeId);
 
-        //sending request
-        $response = Mage::getModel('expertrec_recommendation/api_request')
-            ->setPrepareRequestStatus(false)
-            ->setUserId('expertrec')
-            ->setUrl($finalUrl)
-            ->setMethod(Zend_Http_Client::POST)
-            ->setData($categoryArray)
-            ->setHeader("Content-Type",'application/json')
-            ->setPrepareRequestStatus(true)
-            ->sendRequest();
+            // get category url
+            $category_url = $store->getBaseUrl().$category->getUrlPath();
 
-        $mid = Mage::getStoreConfig(self::MERCHANT_ID);
-        $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
-        $finalUrl = $feedUrl.''.$mid.'/category';
-                
-        //sending request
-        $response = Mage::getModel('expertrec_recommendation/api_request')
-            ->setPrepareRequestStatus(false)
-            ->setUserId('expertrec')
-            ->setUrl($finalUrl)
-            ->setMethod(Zend_Http_Client::POST)
-            ->setData($categoryArray)
-            ->setHeader("Content-Type",'application/json')
-            ->setPrepareRequestStatus(true)
-            ->sendRequest();
+            $category_id = $category->getId();
+    		$logger->log("saved Category for # ".$category_id);
+            $category_name = $category->getName();
+            $category_status = $category->getIsActive();
 
-        if(!$response) {
-            $logger->log('request failed for category with Id #'.$category->getId());
+            // get path with name
+            $pathIdArray = explode('/', $category->getPath());
+            // $storeId = $store->getId();
+            $pathNameArray = array();
+
+            for($i=0;$i<count($pathIdArray);$i++){
+                $categoryy = Mage::getModel('catalog/category');
+                $categoryy->setStoreId($storeId);
+                $categoryy->load($pathIdArray[$i]);
+                $pathNameArray[$i] = $categoryy->getName();
+            }
+            // if($category->getName() == ''){
+            //     $categoryy = Mage::getModel('catalog/category')->load($category->getId());
+            //     $category_name = $categoryy->getName();
+            // }
+            //removing Root catalog which is $pathNameArrray[0]
+            // array_shift($pathNameArray);
+            $category_path = implode('/', $pathNameArray);
+
+            // array_shift($pathIdArray);
+            $category_id_path = implode('/', $pathIdArray);
+
+            $categoryArray = array('categoryId' => $category_id,
+                                   'categoryName' => $category_name,
+                                   'categoryStatus' => $category_status,
+                                   'categoryIdPath' => $category_id_path,
+                                   'categoryNamePath' => $category_path,
+                                   'categoryUrl' => $category_url,
+                                   'sid' => $storeId,
+                                   'wid' => $websiteId);
+
+            //$logger->log("array ".print_r($categoryArray,1));
+            // passing category to identify category url
+            $feedUrl = $this->getFeedEndpoint();
+            $finalUrl = $feedUrl.'/category';
+            if(empty($finalUrl)){
+                return $this;
+            }
+
+            //sending request
+            $response = Mage::getModel('expertrec_recommendation/api_request')
+                ->setPrepareRequestStatus(false)
+                ->setUserId('expertrec')
+                ->setUrl($finalUrl)
+                ->setMethod(Zend_Http_Client::POST)
+                ->setData($categoryArray)
+                ->setHeader("Content-Type",'application/json')
+                ->setPrepareRequestStatus(true)
+                ->sendRequest();
+
+            $mid = Mage::getStoreConfig(self::MERCHANT_ID);
+            $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
+            $finalUrl = $feedUrl.''.$mid.'/category';
+                    
+            //sending request
+            $response = Mage::getModel('expertrec_recommendation/api_request')
+                ->setPrepareRequestStatus(false)
+                ->setUserId('expertrec')
+                ->setUrl($finalUrl)
+                ->setMethod(Zend_Http_Client::POST)
+                ->setData($categoryArray)
+                ->setHeader("Content-Type",'application/json')
+                ->setPrepareRequestStatus(true)
+                ->sendRequest();
+
+            if(!$response) {
+                $logger->log('request failed for category with Id #'.$category->getId());
+            }
         }
         
         return $this;
