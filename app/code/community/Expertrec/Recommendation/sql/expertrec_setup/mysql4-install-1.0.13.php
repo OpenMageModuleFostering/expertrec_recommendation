@@ -1,23 +1,24 @@
 <?php
 
-//echo 'Running The Upgrade from 1.1.5 to 1.1.6 : '.get_class($this)."\n <br /> \n";
-Mage::log("Running The Upgrade from 1.0.11 to 1.0.12 : ".get_class($this));
+//echo 'Installing extension: '.get_class($this)."\n <br /> \n";
+Mage::log("Installing magento : 1.0.12 ");
+
 
 $installer = $this;
 
-$host = $_SERVER['HTTP_HOST'];  
+$host = $_SERVER['HTTP_HOST']; 
 $uri = $_SERVER['REQUEST_URI']; 
-
 
 $installer->startSetup();
 
 $result =array();
-//status
-$result['status'] = "Upgraded";
-//hostname 
-$result['site_host'] = $host;
+
+//Status
+$result['status'] = "Installed";
 //Subdomain
 $result['site_subdomain'] = $uri;
+//hostname 
+$result['site_host'] = $host;
 //selecting for site_details
 $site_data = $installer->getConnection()->fetchAll("select * from {$this->getTable('core_config_data')} where `path` like '%trans_email%'");
 //site name and email
@@ -55,7 +56,7 @@ $installer->run("
     ('default',0,'expertrec/general/mid','new_user'),
     ('default',0,'expertrec/general/secret','NTE5NTQ1Zjk4OGExYzYxOWFkOTkyN2Y3MDQ5MTQ3NTM='),
     ('default',0,'expertrec/general/log_endpoint','https://feed.expertrec.com/magento/9418bba77c3b75abd2842e93b8c52c4a'),
-    ('default',0,'expertrec/general/headers','is_in_stock,expert_image,expert_thumbnail,expert_category,final_price,entity_id,rating_summary,expert_url,created_at,image,msrp,name,price,short_description,sku,small_image,special_price,category_ids'),
+    ('default',0,'expertrec/general/headers','is_in_stock,expert_image,expert_thumbnail,expert_category,expert_category_ids,final_price,entity_id,rating_summary,expert_url,created_at,image,msrp,name,price,short_description,sku,small_image,special_price,category_ids'),
     ('default',0,'expertrec/general/expertrec_image_width',250),
     ('default',0,'expertrec/general/expertrec_image_height',250),
     ('default',0,'expertrec/general/expertrec_thumbnail_width',80),

@@ -336,6 +336,7 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
             'expert_smallImage',
             'expert_thumbnail',
             'expert_category',
+            'expert_category_ids',
             'expert_url',
             'final_price',
             'entity_id',

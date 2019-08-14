@@ -25,7 +25,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const MERCHANT_ID  = 'expertrec/general/mid';
 
 
-      const BUILD_NO = "1487335332";
+      const BUILD_NO = "1487595589";
       private $_password;
 
        //main function which loads the feed API
@@ -320,7 +320,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       }
 
       private function getAllAttributes(){
-          $attrArray = array('qty','is_in_stock','expert_image','expert_smallImage','expert_thumbnail','expert_category','expert_url','final_price','entity_id','attribute_set_id','type_id','entity_type_id','rating_summary');
+          $attrArray = array('qty','is_in_stock','expert_image','expert_smallImage','expert_thumbnail','expert_category','expert_category_ids','expert_url','final_price','entity_id','attribute_set_id','type_id','entity_type_id','rating_summary');
           $attributes = Mage::getResourceModel('catalog/product_attribute_collection')->getItems();
           
           foreach ($attributes as $attribute) {
