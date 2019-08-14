@@ -70,6 +70,13 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
     $cleanDirUrl['secret'] = $this->getSecret();
   	return $cleanDirUrl;
   }
+  // pull feed from info page
+  public function pullFeed(){
+    $pullFeed['surl'] = $this->getBaseUrl().'index.php/expertrec-feed/api/pullFeed';
+    $pullFeed['secret'] = $this->getSecret();
+    $pullFeed['link'] = $this->getBaseUrl().'index.php/expertrec-feed/api/pullFeed?secret='.$this->getSecret();
+    return $pullFeed;
+  }
 
   public function getCustomApiUrl()
   {
@@ -394,7 +401,12 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
     $filterArray = array(
         	'filter_by_stock',
         	'filter_by_status',
-        	'filter_by_visiblity');
+        	// 'filter_by_visiblity'
+          'not_visible_individually',
+          'visible_catalog',
+          'visible_search',
+          'visible_catalog_search'
+          );
          
     return $filterArray;
   }

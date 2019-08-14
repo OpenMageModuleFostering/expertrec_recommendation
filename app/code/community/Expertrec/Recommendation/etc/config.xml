@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Expertrec_Recommendation>
-            <version>1.2.3</version>
+            <version>1.2.4</version>
         </Expertrec_Recommendation>
     </modules>
     <global>
@@ -85,6 +85,26 @@
                     </expertrec_recommendation_save_category>
                 </observers>
             </catalog_category_save_commit_after>
+            <!-- Hook on item view 
+            <catalog_controller_product_view>
+                <observers>
+                    <itemsviewed>
+                        <type>model</type>
+                        <class>bit_itemsviewed/observer</class>
+                        <method>saveProductVisitHistory</method>
+                    </itemsviewed>
+                </observers>
+            </catalog_controller_product_view> -->
+            <!-- Hook for adding wishlist
+            <wishlist_product_add_after>
+                <observers>
+                    <expertrec_recommendation_add_wishlist>         
+                        <type>singleton</type>
+                        <class>expertrec_recommendation/observer</class>
+                        <method>addWishlist</method>         
+                    </expertrec_recommendation_add_wishlist>
+                </observers>
+            </wishlist_product_add_after> -->
         </events>        
     </global>    
     <frontend>

@@ -16,11 +16,20 @@ class Expertrec_Recommendation_Model_Observer {
      * Method to track the add to cart
      */
     public function trackAddToCart(Varien_Event_Observer $observer) {
+
         $product = $observer->getEvent()->getProduct();
         if(!$product instanceof Mage_Catalog_Model_Product) {
             Mage::getSingleton('expertrec_recommendation/log')->log('AddToCart_Track: product is not a valid type',Zend_Log::ERR);
             return $this;
         }
+
+        // added url to track rtr
+        //$lastUrl = Mage::getSingleton('core/session')->getLastUrl();
+        //$currUrl = Mage::helper('core/url')->getCurrentUrl();
+        //$ci_id = $_COOKIE['ci_id'];
+
+        //Mage::getSingleton('core/session')->setCartLastUrl($lastUrl);
+        //Mage::getSingleton('core/session')->setCartCurrUrl($currUrl);
 
         //return unique product id
         $uniqueId = Mage::helper('expertrec_recommendation')->getUniqueId($product);
@@ -30,17 +39,21 @@ class Expertrec_Recommendation_Model_Observer {
         $response = Mage::getModel('expertrec_recommendation/api_request')
             ->setPrepareRequestStatus(false)
             ->setData(array(
+                    //'ci_id' => $ci_id,
+                    //'lastUrl' => $lastUrl,
+                    //'currUrl' => $currUrl,
                     'item' => $uniqueId,
                     'event' => 3,
                     'sku' => $product->getSku(),
                     'domain' => $_SERVER['HTTP_HOST'],
                     'ip' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'])
+
                 )
             ->setHeader("User-Agent",$_SERVER['HTTP_USER_AGENT'])
             ->prepareRequest()
             ->sendRequest();
 
-        //Mage::getSingleton('expertrec_recommendation/log')->log("AddToCart_Track: request with uniqueId ".$uniqueId);
+        // Mage::getSingleton('expertrec_recommendation/log')->log("AddToCart_Track: request made with uniqueId ".$uniqueId);
         if(!$response) {
             Mage::getSingleton('expertrec_recommendation/log')->log('AddToCart_Track: request failed for product with uniqueId #'.$uniqueId,Zend_Log::ERR);
         }
@@ -51,7 +64,7 @@ class Expertrec_Recommendation_Model_Observer {
      * Method to track orders
      */
     public function trackOrder(Varien_Event_Observer $observer) {
-  
+
         $payment = $observer->getEvent()->getPayment();
 
         if(!$payment instanceof Mage_Sales_Model_Order_Payment) {
@@ -78,11 +91,24 @@ class Expertrec_Recommendation_Model_Observer {
             //return unique product id
             $uniqueId = Mage::helper('expertrec_recommendation')->getUniqueId($product, $item);
 
-            //sending request
-            //return boolean
-            $response = Mage::getModel('expertrec_recommendation/api_request')
+            // added url to track rtr
+            //$ci_id = $_COOKIE['ci_id'];
+            //$cartLastUrl =Mage::getSingleton('core/session')->getCartLastUrl();
+            //$cartCurrUrl =Mage::getSingleton('core/session')->getCartCurrUrl();
+
+            //Mage::getSingleton('core/session')->unsCartLastUrl();
+            //Mage::getSingleton('core/session')->unsCartCurrUrl();
+
+            // checking buy from addtocart
+            //if(isset($cartCurrUrl) && isset($cartLastUrl)){
+                //sending request
+                //return boolean
+                $response = Mage::getModel('expertrec_recommendation/api_request')
                 ->setPrepareRequestStatus(false)
                 ->setData(array(
+                        //'cartLastUrl' => $cartLastUrl,
+                        //'cartCurrUrl' => $cartCurrUrl,
+                        //'ci_id' => $ci_id,
                         'item' => $uniqueId,
                         'event' => 2,
                         'sku' => $item->getSku(),
@@ -95,7 +121,29 @@ class Expertrec_Recommendation_Model_Observer {
                 ->prepareRequest()
                 ->sendRequest();
 
-            //Mage::getSingleton('expertrec_recommendation/log')->log("Order_Track: request with uniqueId ".$uniqueId);
+            //}
+            //else{
+                //sending request
+                //return boolean
+               // $response = Mage::getModel('expertrec_recommendation/api_request')
+               // ->setPrepareRequestStatus(false)
+               // ->setData(array(
+                       // 'ci_id' => $ci_id,
+                       // 'item' => $uniqueId,
+                       // 'event' => 2,
+                       // 'sku' => $item->getSku(),
+                       // 'qty' => $item->getQtyOrdered(),
+                       // 'price' => $item->getPriceInclTax(),
+                       // 'domain' => $_SERVER['HTTP_HOST'],
+                       // 'ip' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'])  
+                    //)
+                //->setHeader("User-Agent",$_SERVER['HTTP_USER_AGENT'])
+                //->prepareRequest()
+                //->sendRequest();
+
+            //}
+            
+            // Mage::getSingleton('expertrec_recommendation/log')->log("Order_Track: request made with uniqueId ".$uniqueId);
 
             if(!$response) {
                 Mage::getSingleton('expertrec_recommendation/log')->log('Order_Track: request failed for product with uniqueId #'.$uniqueId,Zend_Log::ERR);
@@ -296,6 +344,125 @@ class Expertrec_Recommendation_Model_Observer {
         return $this;
 
     }
+
+    // public function productView(Varien_Event_Observer $observer){
+    //     $logger = Mage::getSingleton('expertrec_recommendation/log');
+    //     $logger->log("product view");
+    //     // $lastUrl = Mage::getSingleton('core/session')->getLastUrl();
+    //     // $logger->log("view last url ".$lastUrl);
+    //     $currUrl = Mage::helper('core/url')->getCurrentUrl();
+    //     // $logger->log("view curr url ".$currUrl);
+    //     // $logger->log("check ".print_r($_GET,1));
+    //     if($_GET['cifr']=="rtr"){
+    //         $logger->log("from rtr");
+    //         $logger->log("cookie ".print_r($_COOKIE,1));
+    //         // $logger->log("server ".print_r($_SERVER,1));
+            
+
+    //         $product = $observer->getEvent()->getProduct();
+    //         if(!$product instanceof Mage_Catalog_Model_Product) {
+    //             $logger->log('ProductView_Track: product is not a valid type',Zend_Log::ERR);
+    //             return $this;
+    //         }
+
+    //         //return unique product id
+    //         $uniqueId = Mage::helper('expertrec_recommendation')->getUniqueId($product);
+            
+    //         $array = array(
+    //                     'item' => $uniqueId,
+    //                     'event' => 1,
+    //                     'sku' => $product->getSku(),
+    //                     'domain' => $_SERVER['HTTP_HOST'],
+    //                     'ip' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR']);
+
+    //         $logger->log("array ".print_r($array,1));
+    //         //sending request
+    //         //return boolean
+    //         // $response = Mage::getModel('expertrec_recommendation/api_request')
+    //         //     ->setPrepareRequestStatus(false)
+    //         //     ->setData(array(
+    //         //             'item' => $uniqueId,
+    //         //             'event' => 3,
+    //         //             'sku' => $product->getSku(),
+    //         //             'domain' => $_SERVER['HTTP_HOST'],
+    //         //             'ip' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'])
+    //         //         )
+    //         //     ->setHeader("User-Agent",$_SERVER['HTTP_USER_AGENT'])
+    //         //     ->prepareRequest()
+    //         //     ->sendRequest();
+
+    //         // //Mage::getSingleton('expertrec_recommendation/log')->log("ProductView_Track: request with uniqueId ".$uniqueId);
+    //         // if(!$response) {
+    //         //     $logger->log('ProductView_Track: request failed for product with uniqueId #'.$uniqueId,Zend_Log::ERR);
+    //         // }
+    //         return $this;
+
+    //     }
+    //     else{
+    //         $logger->log("not from rtr");
+    //     }
+
+    // }
+    
+
+    //public function addWishlist(Varien_Event_Observer $observer) {
+
+        //$wishListItemCollection = $observer->getItems();
+        //if (count($wishListItemCollection)) {
+            //$arrProductIds = array();
+            //foreach ($wishListItemCollection as $item) {
+                /* @var $product Mage_Catalog_Model_Product */
+              //  $product = $item->getProduct();
+                // $arrProductIds[] = $product->getId();
+            //}
+        //}else{
+        //    Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: wishListItemCollection count is 0',Zend_Log::ERR);
+        //return $this;
+        //}
+
+        //if(!$product instanceof Mage_Catalog_Model_Product) {
+        //    Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: product is not a valid type',Zend_Log::ERR);
+        //    return $this;
+        //}
+
+        // added url to track rtr
+        //$lastUrl = Mage::getSingleton('core/session')->getLastUrl();
+        //$currUrl = Mage::helper('core/url')->getCurrentUrl();
+        //$ci_id = $_COOKIE['ci_id'];
+
+        // Mage::getSingleton('core/session')->setCartLastUrl($lastUrl);
+        // Mage::getSingleton('core/session')->setCartCurrUrl($currUrl);
+
+        //return unique product id
+        //$uniqueId = Mage::helper('expertrec_recommendation')->getUniqueId($product);
+        
+        //sending request
+        //return boolean
+        //$response = Mage::getModel('expertrec_recommendation/api_request')
+          //  ->setPrepareRequestStatus(false)
+          //  ->setData(array(
+          //          'ci_id' => $ci_id,
+          //          'lastUrl' => $lastUrl,
+          //          'currUrl' => $currUrl,
+          //          'item' => $uniqueId,
+          //          'event' => 17,
+          //          'sku' => $product->getSku(),
+          //          'domain' => $_SERVER['HTTP_HOST'],
+          //          'ip' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'])
+
+          //      )
+          //  ->setHeader("User-Agent",$_SERVER['HTTP_USER_AGENT'])
+          //  ->prepareRequest()
+          //  ->sendRequest();
+
+        // Mage::getSingleton('expertrec_recommendation/log')->log("AddToWishlist_Track: request made with uniqueId ".$uniqueId);
+        //if(!$response) {
+          //  Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: request failed for product with uniqueId #'.$uniqueId,Zend_Log::ERR);
+        //}
+        //return $this;
+    //}
+
+
 
     protected function getFeedEndpoint(){
         try{

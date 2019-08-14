@@ -15,7 +15,7 @@ $result['status'] = "Installed";
 //magento version
 $result['mage_ver'] = $mage_ver;
 //expertrec version
-$result['expertrec_ver'] = '1.2.3';
+$result['expertrec_ver'] = '1.2.4';
 //Subdomain
 $result['site_subdomain'] = $uri;
 //hostname 
@@ -62,7 +62,8 @@ $installer->run("
     ('default',0,'expertrec/general/expertrec_image_height',250),
     ('default',0,'expertrec/general/expertrec_thumbnail_width',80),
     ('default',0,'expertrec/general/expertrec_thumbnail_height',80),
-     ('default',0,'expertrec/general/expertrec_feed_push',0)
+    ('default',0,'expertrec/general/expertrec_feed_push',0),
+    ('default',0,'expertrec/general/filters','filter_by_stock,filter_by_status,visible_catalog,visible_search,visible_catalog_search')
     ON DUPLICATE KEY UPDATE `value`=`value`;
 ");
 

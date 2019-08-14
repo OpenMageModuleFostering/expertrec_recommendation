@@ -23,9 +23,10 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const THUMBNAIL_WIDTH = 'expertrec/general/expertrec_thumbnail_width';
       const THUMBNAIL_HEIGHT = 'expertrec/general/expertrec_thumbnail_height';
       const MERCHANT_ID  = 'expertrec/general/mid';
+      const SECRET  = 'expertrec/general/secret';
 
 
-      const BUILD_NO = "1489582957";
+      const BUILD_NO = "1489744852";
       private $_password;
 
        //main function which loads the feed API
@@ -240,7 +241,9 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
             echo '</fieldset>';
 
             echo $this->displaySuggestionApi($baseUrl);
-            echo $this->displayLogApi($baseUrl);  
+            echo $this->displayLogApi($baseUrl); 
+			// pull feed from info page
+            echo $this->displayPullFeed($baseUrl); 
 ?>
             
           </div> <!-- api section end -->
@@ -423,9 +426,8 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $result .= '<div style="display:block"><h4>Expertrec Thumbnail</h4><label for="thumbnailwidth">Thumbnail Width</label><input type="text" id="thumbnailwidth" name="thumbnailwidth" placeholder="Give thumbnail width" value="'.Mage::getStoreConfig(self::THUMBNAIL_WIDTH).'"></div>';
           $result .= '<div style="display:block"><label for="thumbnailheight">Thumbnail Height</label><input type="text" id="thumbnailheight" name="thumbnailheight" placeholder="Give thumbnail height" value="'.Mage::getStoreConfig(self::THUMBNAIL_HEIGHT).'"></div>';
 
-          $filterArray = array('filter_by_stock','filter_by_status','filter_by_visiblity');
-          
-          // filter_by_not_visible_individually','filter_by_visible_catalog','filter_by_visible_search','filter_by_visible_catalog_search'
+          // $filterArray = array('filter_by_stock','filter_by_status','filter_by_visiblity');
+          $filterArray = array('filter_by_stock','filter_by_status','not_visible_individually','visible_catalog','visible_search','visible_catalog_search');
 
           $result .='<fieldset>';
           $result .='<legend>Configure Filters</legend>';
@@ -722,12 +724,35 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $result .= '</fieldset>';
           return $result;
       }
+	// pull feed from info page
+    public function displayPullFeed($baseUrl){
+      $result = '<div style="margin-top:20px">';
+      $result .= '<fieldset>';
+      $result .= '<legend>Pull Feed</legend>';
+
+      $feedUrl = $baseUrl.'index.php/expertrec-feed/api/pullFeed?secret='.$this->_password;
+      $feed_url = $baseUrl.'index.php/expertrec-feed/api/pullFeed';
+
+      $result .= '<form method ="POST" id="pullFeed" name="pullfeed" method="POST" action="'.$feed_url.'">';
+      $result .= '<p>'.$feedUrl.'</p>
+        <input type="hidden" name="secret" value="'.$this->_password.'">
+        <button type="submit" id="pullfeedSubmit" name="pullfeedSubmit">Submit</button></form>';
+
+
+      $result .= '</fieldset>';
+      $result .= '</div>';
+
+      return $result;
+    }
+
+
 
     public function pushFeedAction(){
 
       $logger = Mage::getSingleton('expertrec_recommendation/log');
 
       $mid = Mage::getStoreConfig(self::MERCHANT_ID);
+      $secret = Mage::getStoreConfig(self::SECRET);
       $website_url = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB);
       $admin_email = Mage::getStoreConfig('trans_email/ident_general/email'); //fetch sender email Admin
       $admin_name = Mage::getStoreConfig('trans_email/ident_general/name'); //fetch sender name Admin
@@ -748,7 +773,8 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           //response with mid and secret
           $response = $request->request();
           $data = json_decode($response->getBody(),true);
-          $new_mid = $data['merchantid'];
+          $mid = $data['merchantid'];
+          $secret = $data['secret'];
           //$logger->log("data ".print_r($data,1));
           // update mid and secret
           Mage::helper("expertrec_recommendation")
@@ -759,6 +785,54 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
         }catch (Zend_Http_Client_Exception $e) {
           $logger->log(sprintf($apiUrl ." failed to create mid&secret because HTTP error: %s", $e->getMessage()),Zend_Log::ERR);
         }
+      }
+
+      //get count
+      $array_count = array();
+      $websiteCollection = Mage::getModel('core/website')->getCollection()->load();
+      // $websitecount = count($websiteCollection);
+      $websitecount = $websiteCollection->getSize();
+      foreach ($websiteCollection as $website){
+        $websiteId=$website->getWebsiteId();
+        foreach ($website->getGroups() as $group) {
+          // all stores
+          $stores = $group->getStores();
+          $storeCount = count($stores);
+          foreach ($stores as $oStore) {
+            
+            $storeId=$oStore->getId();
+            // get all products
+            $collection = Mage::getSingleton('expertrec_recommendation/feed_feedfilter')->addBasicFilter($website,$oStore);
+
+            $count = $collection->getSize();
+
+          $array[$storeCount] = array('wid' => $websiteId, 'sid' => $storeId, 'total_products' => $count);
+          $storeCount--;
+           
+          }
+
+        }
+      }
+
+      // feedUrl as api to userpushfeed
+      $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
+
+      // finalurl added with merchant id
+      $finalUrl = $feedUrl.''.$mid.'/';
+      $array_count = array('secrete' => $secret, 'product_count' => $array );
+      // sending request
+      $response = Mage::getModel('expertrec_recommendation/api_request')
+          ->setPrepareRequestStatus(false)
+          ->setUserId('expertrec')
+          ->setUrl($finalUrl)
+          ->setMethod(Zend_Http_Client::GET)
+          ->setData($array_count)
+          ->setHeader("Content-Type",'application/json')
+          ->setPrepareRequestStatus(true)
+          ->sendRequest();
+
+      if(!$response) {
+          $logger->log('UserFeedPush_Track: request failed for total_count');
       }
 
       // all website
@@ -792,12 +866,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                     $header = array();
                 }
                 if(!empty($header)){
-                  // feedUrl as api to userpushfeed
-                  $feedUrl = "https://feed.expertrec.com/magento/b01eba6261ad7f174cd3a16523e86e65/";
-                  // $mid = Mage::getStoreConfig(self::MERCHANT_ID);
-                  // finalurl added with merchant id
-                  // $finalUrl = $feedUrl.''.$mid.'/';
-                  $finalUrl = $feedUrl.''.$new_mid.'/';
+
                   if(empty($finalUrl)){
                       return $this;
                   }
@@ -819,7 +888,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                       ->setPrepareRequestStatus(true)
                       ->sendRequest();
 
-                  //$logger->log('UserFeedPush_Track: request succeded for product with Id #'.$product->getId().' of store '.$storeId);
+                 // $logger->log('UserFeedPush_Track: request succeded for product with Id #'.$product->getId().' of store '.$storeId);
                   if(!$response) {
                       $logger->log('UserFeedPush_Track: request failed for product with Id #'.$product->getId());
                   }
@@ -840,13 +909,13 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           ->setPrepareRequestStatus(false)
           ->setUserId('expertrec')
           ->setUrl($finalUrl)
-          ->setMethod(Zend_Http_Client::POST)
+          ->setMethod(Zend_Http_Client::GET)
           ->setData($array)
           ->setHeader("Content-Type",'application/json')
           ->setPrepareRequestStatus(true)
           ->sendRequest();
 
-        $logger->log('UserFeedPush_Track: request completed');
+        //$logger->log('UserFeedPush_Track: request completed');
         if(!$response) {
           $logger->log('UserFeedPush_Track: Request not complete');
         }
@@ -860,6 +929,22 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       $this->pushFeedAction();
       return $this->_redirectReferer();
     } 
-
+	
+	// pull feed from info page
+    public function pullFeedAction(){
+      try{
+        //return array of all parameters sent
+        $requestParams = Mage::app()->getRequest()->getParams();
+        $Password = isset($requestParams['secret']) ? $requestParams['secret'] : '';
+        // Check password. if invalid password, it will not proceed.
+        if(!Mage::getModel('expertrec_recommendation/validate')->checkPassword($Password)){
+            die('ERROR: The specified password is invalid.');
+        }
+        $this->pushFeedAction();
+        die("Feed pulled successfully.");
+      }catch (Exception $e) {
+          Mage::getSingleton('expertrec_recommendation/log')->log( "Not able to pull the feed: ".$e->getMessage());
+      }
+    }
 
 }

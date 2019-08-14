@@ -276,6 +276,18 @@
 					</form>
              	</fieldset>
              </div>-->
+			<!-- pull feed from info page -->
+            <div style="margin-top:20px">
+            	<fieldset>
+	        		<legend>Pull Feed</legend>
+	        		<?php $pullFeed = $this->pullFeed();?>
+	        		<form method="post" action="<?php echo $pullFeed['surl'];?>" target="_blank">
+						<input type="hidden" name="secret" value="<?php echo $pullFeed['secret'];?>">
+						<p><?php echo $pullFeed['link']; ?></p>
+						<button type="submit">submit</button>
+					</form>
+             	</fieldset>
+            </div>
 	    </div>   
 	    <!--End of API Info section-->
 
@@ -330,6 +342,7 @@
             			<!--Configure Filters section-->
             			<fieldset>
             				<legend>Configure Filters</legend>
+            				<p>filter_by_visiblity -- choose from ( not_visible_individually , visible_catalog , visible_search , visible_catalog_search ).</p>
             				<?php foreach ($this->getAllFilters() as $_filter): ?>	
             			      <?php if($storedFilters != null && in_array($_filter, $storedFilters)): ?>                    	  
 	                    	  	<input type="checkbox" id="<?php echo $_filter; ?>" name="filter_check_list[]" 
