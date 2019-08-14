@@ -412,7 +412,7 @@ class Expertrec_Recommendation_Model_Observer {
     
 
     public function addWishlist(Varien_Event_Observer $observer) {
-
+        $logger=Mage::getSingleton('expertrec_recommendation/log');
         $wishListItemCollection = $observer->getItems();
         if (count($wishListItemCollection)) {
             $arrProductIds = array();
@@ -422,12 +422,12 @@ class Expertrec_Recommendation_Model_Observer {
                 // $arrProductIds[] = $product->getId();
             }
         }else{
-            Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: wishListItemCollection count is 0',Zend_Log::ERR);
+            $logger->log('AddToWishlist_Track: wishListItemCollection count is 0',Zend_Log::ERR);
         return $this;
         }
 
         if(!$product instanceof Mage_Catalog_Model_Product) {
-            Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: product is not a valid type',Zend_Log::ERR);
+            $logger->log('AddToWishlist_Track: product is not a valid type',Zend_Log::ERR);
             return $this;
         }
 
@@ -452,13 +452,66 @@ class Expertrec_Recommendation_Model_Observer {
             ->prepareRequest()
             ->sendRequest();
 
-        // Mage::getSingleton('expertrec_recommendation/log')->log("AddToWishlist_Track: request made with uniqueId ".$uniqueId);
+        // $logger->log("AddToWishlist_Track: request made with uniqueId ".$uniqueId);
         if(!$response) {
-            Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: request failed for product with uniqueId #'.$uniqueId,Zend_Log::ERR);
+            $logger->log('AddToWishlist_Track: request failed for product with uniqueId #'.$uniqueId,Zend_Log::ERR);
         }
         return $this;
     }
 
+
+    public function outOfStockReport($observer)
+    {   
+        $logger=Mage::getSingleton('expertrec_recommendation/log');
+        $item = $observer->getEvent()->getItem();
+        $item_array = $item->getData();
+
+        $product_id = $item_array["product_id"];
+        $qty = $item_array["qty"];
+
+        if ($qty == 0){
+            $stockArray = array('product_id' => $product_id, 'qty' => $qty, 'is_in_stock' =>0);
+
+            $feedUrl = $this->getFeedEndpoint();
+            $finalUrl = $feedUrl.'/stock';
+            if(empty($finalUrl)){
+                return $this;
+            }
+
+            //sending request
+            $response = Mage::getModel('expertrec_recommendation/api_request')
+                ->setPrepareRequestStatus(false)
+                ->setUserId('expertrec')
+                ->setUrl($finalUrl)
+                ->setMethod(Zend_Http_Client::POST)
+                ->setData($stockArray)
+                ->setHeader("Content-Type",'application/json')
+                ->setPrepareRequestStatus(true)
+                ->sendRequest();
+
+            $mid = Mage::getStoreConfig(self::MERCHANT_ID);
+            $feedUrl = "https://feed.expertrec.com/magento/n01eba6261ad7f174cd3a16523e86e65/";
+            $finalUrl = $feedUrl.''.$mid.'/category';
+                    
+            //sending request
+            $response = Mage::getModel('expertrec_recommendation/api_request')
+                ->setPrepareRequestStatus(false)
+                ->setUserId('expertrec')
+                ->setUrl($finalUrl)
+                ->setMethod(Zend_Http_Client::POST)
+                ->setData($stockArray)
+                ->setHeader("Content-Type",'application/json')
+                ->setPrepareRequestStatus(true)
+                ->sendRequest();
+
+            // $logger->log('SUCCESS : request made for stock status with Id #'.$product_id);
+            if(!$response) {
+                $logger->log('request failed for stock status with Id #'.$product_id);
+            }
+        }
+
+
+    }
 
 
     protected function getFeedEndpoint(){

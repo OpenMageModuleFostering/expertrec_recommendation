@@ -37,18 +37,19 @@ class Expertrec_Recommendation_ConfigController extends Mage_Core_Controller_Fro
                   die("Authentication failed");
               }
               
-              $encoded_secret = base64_encode($secret);
+              // $encoded_secret = base64_encode($secret);
          
               //store mid and secret then clear cache
               Mage::helper("expertrec_recommendation")
-                    ->saveConfig('secret',$encoded_secret)         
+                    ->saveConfig('secret',$secret)         
                     ->saveConfig('mid',$mid)
                     ->clearCache();
 
               // need to remove, we now no longer use cache.
               //update config variable
+              $decoded_secret = base64_decode($secret);
               Mage::getSingleton('expertrec_recommendation/feed_feedconfig')
-                    ->setSecret($secret)
+                    ->setSecret($decoded_secret)
                     ->setMerchantId($mid);
 
               die("Successfully updated mid and secret");
