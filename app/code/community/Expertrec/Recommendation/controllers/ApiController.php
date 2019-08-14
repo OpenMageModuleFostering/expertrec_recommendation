@@ -19,7 +19,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const IMAGE_WIDTH = 'expertrec/general/expertrec_image_width';
       const IMAGE_HEIGHT = 'expertrec/general/expertrec_image_height';
 
-      const BUILD_NO = "1484913773";
+      const BUILD_NO = "1485272396";
       private $_password;
 
       // return websites and stores information
@@ -555,4 +555,3 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       }
 
 }
-?>

@@ -70,7 +70,7 @@ class Expertrec_Recommendation_Model_Catalogsearch_Layer extends Mage_CatalogSea
             $this->setExpertrecSearchData();
             $product_ids = Mage::helper('expertrec_recommendation/searchhelper')->getResultIds();    
             Mage::getSingleton('expertrec_recommendation/log')->log(" The expertrec result IDs are ".count($product_ids));        
-
+            //Mage::log($product_ids);
             $collection
             ->addAttributeToSelect(Mage::getSingleton('catalog/config')->getProductAttributes())
             ->addFieldToFilter('entity_id',array('in'=>$product_ids))
@@ -80,6 +80,20 @@ class Expertrec_Recommendation_Model_Catalogsearch_Layer extends Mage_CatalogSea
             ->addTaxPercents()
             ->addStoreFilter()
             ->addUrlRewrite();
+            //->getSelect()->order("find_in_set(e.entity_id, '" . implode(',', $product_ids)."') DESC");
+            $requestParams = Mage::app()->getRequest()->getParams();
+
+            $orderby = isset($requestParams["order"]) ? $requestParams["order"] : 'relevance';
+            $dir = isset($requestParams["dir"]) ? $requestParams["dir"] : 'desc';
+
+            if($orderby == "relevance") {
+                if($dir == 'desc'){
+                    $collection->getSelect()->order("find_in_set(e.entity_id, '" . implode(',', $product_ids)."') ASC");
+                }
+                else {
+                    $collection->getSelect()->order("find_in_set(e.entity_id, '" . implode(',', $product_ids)."') DESC");
+                }
+            }
 
             Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($collection);
             Mage::getSingleton('catalog/product_visibility')->addVisibleInSearchFilterToCollection($collection);
