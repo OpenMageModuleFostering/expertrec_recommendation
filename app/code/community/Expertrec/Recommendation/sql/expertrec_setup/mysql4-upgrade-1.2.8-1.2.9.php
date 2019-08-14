@@ -8,7 +8,7 @@ $mage_ver = Mage::getVersion();
 $php_ver = phpversion();
 $host = $_SERVER['HTTP_HOST'];  
 $uri = $_SERVER['SCRIPT_NAME']; 
-$protocol = $_SERVER['REQUEST_SCHEME'];
+// $protocol = $_SERVER['REQUEST_SCHEME'];
 
 $installer->startSetup();
 
@@ -18,8 +18,19 @@ $result['status'] = "Upgraded";
 //magento version
 $result['mage_ver'] = $mage_ver;
 //expertrec version
-$result['expertrec_ver'] = '1.2.8';
+$result['expertrec_ver'] = '1.2.9';
 $result['php_ver'] = $php_ver;
+
+if (isset($_SERVER['HTTPS']) &&
+    ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1) ||
+    isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
+    $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
+  $protocol = 'https';
+}
+else {
+  $protocol = 'http';
+}
+
 //hostname 
 $result['site_protocol'] = $protocol;
 $result['site_host'] = $host;
