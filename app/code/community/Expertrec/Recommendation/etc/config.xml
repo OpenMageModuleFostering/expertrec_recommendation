@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Expertrec_Recommendation>
-            <version>1.2.21</version>
+            <version>1.2.3</version>
         </Expertrec_Recommendation>
     </modules>
     <global>
@@ -25,58 +25,12 @@
             <expertrec_setup>
                 <setup>
                     <module>Expertrec_Recommendation</module>
+                    <class>Expertrec_Recommendation_Model_Resource_Mysql4_Setup</class>
+
                 </setup>
             </expertrec_setup>
         </resources>
         <events>
-            <!-- 
-            Added Hook for save_product,delete_product,save_category,view_product,
-            add_to_wishlist,add_to_cart,remove_from_cart,place_order,sale_went_out_of_stock 
-            -->
-            <catalog_product_save_commit_after>
-                <observers>
-                    <expertrec_recommendation_stockupdate>
-                        <class>expertrec_recommendation/observer</class>
-                        <method>saveProduct</method>
-                    </expertrec_recommendation_stockupdate>
-                </observers>
-            </catalog_product_save_commit_after>
-            <catalog_product_delete_before>
-                <observers>
-                    <expertrec_recommendation_track_delete>
-                        <type>singleton</type>
-                        <class>expertrec_recommendation/observer</class>
-                        <method>trackDelete</method>
-                    </expertrec_recommendation_track_delete>
-                </observers>
-            </catalog_product_delete_before>
-            <catalog_category_save_commit_after>
-                <observers>
-                    <expertrec_recommendation_save_category>
-                        <type>singleton</type>
-                        <class>expertrec_recommendation/observer</class>
-                        <method>saveCategory</method>
-                    </expertrec_recommendation_save_category>
-                </observers>
-            </catalog_category_save_commit_after>
-            <!-- <catalog_controller_product_view>
-                <observers>
-                    <itemsviewed>
-                        <type>model</type>
-                        <class>bit_itemsviewed/observer</class>
-                        <method>saveProductVisitHistory</method>
-                    </itemsviewed>
-                </observers>
-            </catalog_controller_product_view>  -->
-            <wishlist_product_add_after>
-                <observers>
-                    <expertrec_recommendation_add_wishlist>         
-                        <type>singleton</type>
-                        <class>expertrec_recommendation/observer</class>
-                        <method>addWishlist</method>         
-                    </expertrec_recommendation_add_wishlist>
-                </observers>
-            </wishlist_product_add_after> 
             <checkout_cart_product_add_after>
                 <observers>
                     <expertrec_recommendation_track_addtocart>
@@ -86,15 +40,6 @@
                     </expertrec_recommendation_track_addtocart>
                 </observers>
             </checkout_cart_product_add_after>
-            <sales_quote_remove_item>
-                <observers>
-                    <expertrec_recommendation_track_remove_item>
-                        <type>singleton</type>
-                        <class>expertrec_recommendation/observer</class>
-                        <method>trackRemoveItem</method>
-                    </expertrec_recommendation_track_remove_item>
-                </observers>
-            </sales_quote_remove_item>
             <sales_order_payment_place_end>
                 <observers>
                     <expertrec_recommendation_track_order>
@@ -104,26 +49,42 @@
                     </expertrec_recommendation_track_order>
                 </observers>
             </sales_order_payment_place_end>
-            <cataloginventory_stock_item_save_after>
+            <sales_quote_remove_item>
                 <observers>
-                    <expertrec_recommendation_save_stock>
+                    <expertrec_recommendation_track_remove_item>
                         <type>singleton</type>
                         <class>expertrec_recommendation/observer</class>
-                        <method>outOfStockReport</method>
-                    </expertrec_recommendation_save_stock>
+                        <method>trackRemoveItem</method>
+                    </expertrec_recommendation_track_remove_item>
                 </observers>
-            </cataloginventory_stock_item_save_after>
-
-            <!-- <adminhtml_controller_urlrewrite_save>
+            </sales_quote_remove_item>
+            <catalog_product_delete_before>
                 <observers>
-                    <expertrec_recommendation_save_url>
+                    <expertrec_recommendation_track_delete>
                         <type>singleton</type>
                         <class>expertrec_recommendation/observer</class>
-                        <method>url</method>
-                    </expertrec_recommendation_save_url>
+                        <method>trackDelete</method>
+                    </expertrec_recommendation_track_delete>
                 </observers>
-            </adminhtml_controller_urlrewrite_save>-->
-
+            </catalog_product_delete_before>
+            <catalog_product_save_commit_after>
+                <observers>
+                    <expertrec_recommendation_stockupdate>
+                        <class>expertrec_recommendation/observer</class>
+                        <method>saveProduct</method>
+                    </expertrec_recommendation_stockupdate>
+                </observers>
+            </catalog_product_save_commit_after>
+            <!-- Hook on New Category and Category Edit -->
+            <catalog_category_save_commit_after>
+                <observers>
+                    <expertrec_recommendation_save_category>
+                        <type>singleton</type>
+                        <class>expertrec_recommendation/observer</class>
+                        <method>saveCategory</method>
+                    </expertrec_recommendation_save_category>
+                </observers>
+            </catalog_category_save_commit_after>
         </events>        
     </global>    
     <frontend>
@@ -148,7 +109,8 @@
                     <module>Expertrec_Recommendation_Adminhtml</module>
                     <frontName>expertrec-signup</frontName>
                 </args>
-            </expertrec-signup>          
+            </expertrec-signup>
+            <!-- added support email -->           
             <expertrec>
                 <use>standard</use>
                 <args>
@@ -171,6 +133,7 @@
             </controller_action_layout_load_before>
         </events>
     </frontend>
+	<!-- added template for admin-notification -->
     <adminhtml>
         <layout>
             <updates>
@@ -180,4 +143,5 @@
             </updates>
         </layout>
     </adminhtml>
+
 </config>
