@@ -11,7 +11,6 @@
 class Expertrec_Recommendation_Model_Feed_Feedcreator {
 
     const CONFIG_HEADERS  = 'expertrec/general/headers';
-    const CONFIG_FILTERS = 'expertrec/general/filters';
     protected $_oWriter;
     protected $_ofields=array();
 
@@ -98,17 +97,10 @@ class Expertrec_Recommendation_Model_Feed_Feedcreator {
     protected function prepareHeaders() {
         try{
             $storedHeaders = Mage::getStoreConfig(self::CONFIG_HEADERS);
-            $storedFilters = Mage::getStoreConfig(self::CONFIG_FILTERS);
             if (isset($storedHeaders)){
                 $header = explode(',', $storedHeaders);
             }else{
                 $header = array();
-            }
-            if (isset($storedFilters)){
-                $filter = explode(',', $storedFilters);
-            }
-            else{
-                $filter = array();
             }
 
             if(empty($header)){
@@ -116,13 +108,11 @@ class Expertrec_Recommendation_Model_Feed_Feedcreator {
                 return false;
             }
 
-            $totalHeaders = array_merge($header,$filter);
             //setting header fields array to this, so we can use it later
-            $this->_ofields=array_merge($header,$filter);
+            $this->_ofields=array_merge($header);
 
             //writing header row
-            $this->_oWriter->setHeader($totalHeaders)->writeHeaderRow();
-            //$this->_oWriter->setHeader($filter)->writeHeaderRow();
+            $this->_oWriter->setHeader($header)->writeHeaderRow();
 
         }catch (Exception $e) {
             Mage::getSingleton('expertrec_recommendation/log')->log("Error in writing header: ".$e->getMessage());
@@ -145,3 +135,4 @@ class Expertrec_Recommendation_Model_Feed_Feedcreator {
 
 
 }
+?>

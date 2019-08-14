@@ -10,12 +10,6 @@
                     <sort_order>10</sort_order>
                     <action>expertrec-signup</action>
                 </expertrec>
-                <!-- added support mail -->
-                <support translate="title">
-                    <title>Add Support</title>
-                    <sort_order>90</sort_order>
-                    <action>expertrec-signup/index/mail</action>
-                </support>
             </children>
         </expertrec>
     </menu>

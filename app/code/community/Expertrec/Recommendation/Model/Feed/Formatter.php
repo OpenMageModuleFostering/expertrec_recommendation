@@ -5,8 +5,6 @@ class Expertrec_Recommendation_Model_Feed_Formatter {
     //getting image width and height from db
     const IMAGE_WIDTH = 'expertrec/general/expertrec_image_width';
     const IMAGE_HEIGHT = 'expertrec/general/expertrec_image_height';
-    const THUMBNAIL_WIDTH = 'expertrec/general/expertrec_thumbnail_width';
-    const THUMBNAIL_HEIGHT = 'expertrec/general/expertrec_thumbnail_height';
 
     protected $_oConfig= array();
     
@@ -36,40 +34,17 @@ class Expertrec_Recommendation_Model_Feed_Formatter {
                     $vValue = $this->_getImage($skey,$product);
                     break;
                 case 'expert_category':
-                    $vValue = $this->_getCategories($product,0);
-                    break; 
-                case 'expert_category_ids':
-                    $vValue = $this->_getCategories($product,1);
-                    break;           
+                    $vValue = $this->_getCategories($product);
+                    break;
                 case 'expert_url':
-                    //$vValue=$product->getProductUrl();
-                    //changing ProductUrl from /index.php/catalog/product/view/id/539/s/racer-back-maxi-dress/ to /index.php/racer-back-maxi-dress.html
-                    $url = Mage::getBaseUrl().$product->url_path;
-                    $vValue=$url;
+                    $vValue=$product->getProductUrl();
                     break;
                 case 'qty':
                     $vValue = (int)$product->getData("qty");
                     break;
-                case 'filter_by_stock':
-                    $vValue = 0;
-                    break;
-                case 'filter_by_status':
-                    $vValue = 2;
-                    break;
-                case 'filter_by_visiblity':
-                    $vValue = array(1,2,3,4);
-                    break;
                 default:
-                    $attributedata = Mage::getSingleton("eav/config")->getAttribute('catalog_product', $skey)->getData();
-                    $vValue =$product->getData($skey);
-                    //For multiselect attr, need to use attrText to retrieve label value
-                    if(!empty($vValue) && array_key_exists('frontend_input',$attributedata)
-                      && (isset($attributedata['frontend_input']) && $attributedata['frontend_input'] == 'select'))
-                    {
-                        $vValue .= chr(4).$product->getAttributeText($skey);
-                        //Mage::getSingleton('expertrec_recommendation/log')->log(" The select dropdown is : ".$attributedata['frontend_input']." key is : ".$skey);
-                    }
-                    break;
+                    $vValue =$product->getData($skey); 
+
             }
            
             if(empty($vValue)){
@@ -82,13 +57,9 @@ class Expertrec_Recommendation_Model_Feed_Formatter {
         return $aFeedRow;
     }
 
-
-    /*
-    @idstr determines if this combination is called for categories, or for category ids
-    */
-    protected function _getCategories($product,$idstr){
+    protected function _getCategories($product){
         $path = Mage::getSingleton('expertrec_recommendation/translator_category')
-                    ->translate($product,$idstr);
+                    ->translate($product);
         return $path;
     }
 
@@ -97,35 +68,25 @@ class Expertrec_Recommendation_Model_Feed_Formatter {
             $width = Mage::getStoreConfig(self::IMAGE_WIDTH);
             $height = Mage::getStoreConfig(self::IMAGE_HEIGHT);
 
-            $twidth = Mage::getStoreConfig(self::THUMBNAIL_WIDTH);
-            $theight = Mage::getStoreConfig(self::THUMBNAIL_HEIGHT);
-
-            if('expert_image' == $fieldName ){
-                if($this->_oConfig['generateImage']){
-                    return (string)Mage::helper('catalog/image')->init($product, 'image')->resize($this->_oConfig['imageWidth'], $this->_oConfig['imageHeight']);
-                }else if(!empty($width) && !empty($height)){
-                    return (string)Mage::helper('catalog/image')->init($product, 'image')->resize($width, $height);
-                }else if(empty($width) && !empty($height)){
-                    return (string)Mage::helper('catalog/image')->init($product, 'image')->resize($this->_oConfig['imageWidth'], $height);
-                }else if(empty($height) && !empty($width)){
-                    return (string)Mage::helper('catalog/image')->init($product, 'image')->resize($width, $this->_oConfig['imageHeight']);
-                }else if(empty($height) && empty($width)){
-                    return (string)Mage::helper('catalog/image')->init($product, 'image')->resize($this->_oConfig['imageWidth'], $this->_oConfig['imageHeight']);
-                }
+            if('expert_image' == $fieldName && $this->_oConfig['generateImage']){
+                return (string)Mage::helper('catalog/image')->init($product, 'image')->resize($this->_oConfig['imageWidth'], $this->_oConfig['imageHeight']);
+            }
+            else if(!empty($width) && !empty($height)){
+                return (string)Mage::helper('catalog/image')->init($product, 'image')->resize($width, $height);
+            } 
+            else if(empty($width) && !empty($height)){
+                return (string)Mage::helper('catalog/image')->init($product, 'image')->resize($this->_oConfig['imageWidth'], $height);
+            }
+            else if(empty($height) && !empty($width)){
+                return (string)Mage::helper('catalog/image')->init($product, 'image')->resize($width, $this->_oConfig['imageHeight']);
+            }
+            else if(empty($height) && empty($width)){
+                return (string)Mage::helper('catalog/image')->init($product, 'image')->resize($this->_oConfig['imageWidth'], $this->_oConfig['imageHeight']);
             }
             else if('expert_smallImage' == $fieldName){
                 return (string)Mage::helper('catalog/image')->init($product, 'image')->resize(250,250);
-            }
-            else if ('expert_thumbnail' == $fieldName) {
-                if(!empty($twidth) && !empty($theight)){
-                    return (string)Mage::helper('catalog/image')->init($product, 'thumbnail')->resize($twidth, $theight);
-                }else if(empty($twidth) && !empty($theight)){
-                    return (string)Mage::helper('catalog/image')->init($product, 'thumbnail')->resize(80, $theight);
-                }else if(empty($theight) && !empty($twidth)){
-                    return (string)Mage::helper('catalog/image')->init($product, 'thumbnail')->resize($twidth, 80);
-                }else if(empty($theight) && empty($twidth)){
-                    return (string)Mage::helper('catalog/image')->init($product, 'thumbnail')->resize(80,80);
-                }
+            } else if ('expert_thumbnail' == $fieldName) {
+                return (string)Mage::helper('catalog/image')->init($product, 'image')->resize(80,80);
             }
         } catch (Exception $e) {
             Mage::getSingleton('expertrec_recommendation/log')->log("Error while fetching the image" . $e->getMessage());
@@ -134,3 +95,4 @@ class Expertrec_Recommendation_Model_Feed_Formatter {
         return Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'catalog/product' . $product->getData('image');
     }
 }
+?>

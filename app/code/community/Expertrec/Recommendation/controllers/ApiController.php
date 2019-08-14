@@ -3,8 +3,6 @@
 class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_Action {
 
       const CONFIG_HEADERS  = 'expertrec/general/headers';
-    // getting filters
-      const CONFIG_FILTERS  = 'expertrec/general/filters';
       const SEARCH_LIST_ENABLE = 'search/enable';
       const SEARCH_LIST_API = 'search/api';
       const SEARCH_FACET_LIST = 'search/facets_list';
@@ -20,35 +18,12 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const IS_UPLOAD_FEED = 'is_upload';
       const IMAGE_WIDTH = 'expertrec/general/expertrec_image_width';
       const IMAGE_HEIGHT = 'expertrec/general/expertrec_image_height';
-      const THUMBNAIL_WIDTH = 'expertrec/general/expertrec_thumbnail_width';
-      const THUMBNAIL_HEIGHT = 'expertrec/general/expertrec_thumbnail_height';
-      const MERCHANT_ID  = 'expertrec/general/mid';
 
-
-      const BUILD_NO = "1487595589";
+      const BUILD_NO = "1484913773";
       private $_password;
 
-       //main function which loads the feed API
-      public function infoAction()
-      {
-         //return array of all parameters sent
-          $requestParams = Mage::app()->getRequest()->getParams(); 
-          
-          $Password = isset($requestParams['secret']) ? $requestParams['secret'] : '';
-          
-          // Check password. if invalid password, it will not proceed.
-          if(!Mage::getModel('expertrec_recommendation/validate')->checkPassword($Password)){
-            die('ERROR: The specified password is invalid.');
-          }
-
-         Mage::register('buildno',self::BUILD_NO);          
-         Mage::register('secret',Mage::getModel('expertrec_recommendation/validate')->getPassword());        
-         $this->loadLayout();
-         $this->renderLayout();
-      }  
-
       // return websites and stores information
-      public function infodupAction(){
+      public function infoAction(){
 
           //return array of all parameters sent
           $requestParams = Mage::app()->getRequest()->getParams(); 
@@ -92,7 +67,6 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
               try{
                   echo "<h4 style='margin:10px auto;'>Magento Version: <span style='color:red;'>".Mage::getVersion()."</span></h4>"; 
               }catch(Exception $em){};
-              echo "<h4 style='margin:10px auto;'>Merchant ID: <span style='color:red;'>".Mage::getStoreConfig(self::MERCHANT_ID)."</span></h4>";
 ?>            
               <ul class="nav nav-tabs" style="margin-top:20px;">
                   <li class="active"><a data-toggle="tab" href="#apiSection">Api</a></li>
@@ -100,8 +74,6 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                   <li><a data-toggle="tab" href="#feedEndpointSection">Feed Config</a></li>
                   <li><a data-toggle="tab" href="#searchConfSection">Search</a></li>
                   <li><a data-toggle="tab" href="#siteDetailsSection">Details</a></li>
-                  <!-- added xml-file link -->
-                  <!-- <li><a href="<?php //echo Mage::getBaseUrl().'xml.php';?>">xml file</a></li> -->
               </ul>
               <div style="clear:both;"></div>
           <div class="tab-content">
@@ -116,8 +88,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                           <th>Website Name</th>
                           <th>Store ID</th>
                           <th>Store Name</th>
-                          <th>Store Language</th>
-                          <th>Total# Products</th>
+                          <th>Total Pages</th>
                           <th>Url</th>
                         </tr>
                     </thead>
@@ -136,27 +107,23 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
                                 $stores = $group->getStores();
                                 foreach ($stores as $oStore) {
                                     $sid=$oStore->getId();
-                                    $storeUrl=Mage::app()->getStore($sid)->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_WEB).'index.php/expertrec-feed?secret='.$this->_password.'&cmd=export&wid='.$wid.'&sid='.$sid;
+                                    $apiUrl=$baseUrl.'index.php/expertrec-feed?secret='.$this->_password.'&cmd=export&wid='.$wid.'&sid='.$sid;
                                     // Display the store-website details with feed api
                                     echo '<tr>';
                                     echo '<td style="text-align:center;">'.$wid.'</td>';
                                     echo '<td style="text-align:center;">'.$website->getName().'</td>';
                                     echo '<td style="text-align:center;">'.$sid.'</td>';
                                     echo '<td style="text-align:center;">'.$oStore->getName().'</td>';
-                                    echo '<td style="text-align:center;">'.Mage::getStoreConfig('general/locale/code', $sid).'</td>';
                                     try{
-                                        $pcount = Mage::helper('expertrec_recommendation')->getProductCount($wid,$sid);
-
-                                        echo '<td style="text-align:center;">'.$pcount.'</td>';
+                                        $collection=$feedFilter->addBasicFilter($website,$oStore)
+                                                               ->setPageSize(500);
+                                        $pages = $collection->getLastPageNumber();
+                                        echo '<td style="text-align:center;">'.(string)$pages.'</td>';
 
                                     }catch(Exception $e){
                                         echo '<td style="text-align:center;"><b style="color:red;">Error: </b>'.$e->getMessage().'</td>';
                                     }
-                             
-                                    echo '<td>
-                                    <form method="post" action="'.$storeUrl.'">
-                                    <p>'.$storeUrl.'</p>
-                                    <button type="submit">submit</button></form></td>';
+                                    echo '<td><a href="'.$apiUrl.'">'.$apiUrl.'</a></td>';
                                     echo '</tr>';
                                 }
                             }
@@ -177,41 +144,18 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
             </p>
             <fieldset>
                 <legend>Example</legend>
-<?php  
-              $customImagePortion ="&width=170&height=170";
-              $imageWidth = Mage::getStoreConfig(self::IMAGE_WIDTH);
-              $imageHeight = Mage::getStoreConfig(self::IMAGE_HEIGHT);
-              if((isset($imageWidth) && $imageWidth != "") && (isset($imageHeight) && $imageHeight != ""))
-              {
-                  $customImagePortion = "&width=".$imageWidth."&height=".$imageHeight; 
-              }
-              elseif(isset($imageWidth) && $imageWidth != "")
-              {
-                $customImagePortion ="&width=".$imageWidth."&height=170";
-              }
-              elseif(isset($imageHeight) && $imageHeight != "")
-              {
-                $customImagePortion ="&width=170&height=".$imageHeight;
-              }
-
+<?php      
+              
               $apiUrlWithCustomConf=$baseUrl.'index.php/expertrec-feed?secret='.$this->_password.'&cmd=export&wid=1&sid=1';
 
-              echo '<form id="custImageForm" name = "custImageForm" method="POST" action ="'.$apiUrlWithCustomConf.$customImagePortion.'">
-              <b>With Custom image size</b><br />';
-              echo '<p>'.$apiUrlWithCustomConf.$customImagePortion.'</p>
-                 <button id="custImgSubmit" name="custImgSubmit" type="submit">Submit</button>
-                 </form>';
+              echo '<p><b>With Custom image size</b><br />';
+              echo '<p><a href="'.$apiUrlWithCustomConf.'&width=170&height=170">'.$apiUrlWithCustomConf.'&width=170&height=170</a></p>';
 
-              echo '<form id ="custImgForm1" name="custImgForm1" method="POST" action="'.$apiUrlWithCustomConf.'&ps=1&pe=2">
-              <p><b>With pagination without page size(default page size is 500)</b><br />'; 
-              echo '<p>'.$apiUrlWithCustomConf.'&ps=1&pe=2</p>
-              <button id="custImgSubmit1" name="custImgSubmit1" type="submit">Submit</button>
-                 </form>';
+              echo '<p><b>With pagination without page size(default page size is 500)</b><br />'; 
+              echo '<p><a href="'.$apiUrlWithCustomConf.'&ps=1&pe=2">'.$apiUrlWithCustomConf.'&ps=1&pe=2</a></p>';
 
-              echo '<form id="custImgForm2" name="custImageForm2" method="POST" action="'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50">
-              <p><b>With pagination & page size</b><br />'; 
-              echo '<p>'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50</p>
-              <button type="submit" id="custImgSubmit2" name="custImgSubmit2">Submit</submit></form>';
+              echo '<p><b>With pagination & page size</b><br />'; 
+              echo '<p><a href="'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50">'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50</a></p>';
             echo '</fieldset>';
 
             echo $this->displaySuggestionApi($baseUrl);
@@ -272,17 +216,10 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           $logUrl = $baseUrl.'index.php/expertrec-feed/index/getlog?secret='.$this->_password;
           $cleanDirUrl = $baseUrl.'index.php/expertrec-feed/index/clean?secret='.$this->_password;
 
-          $result .= '<form method ="POST" id="logForm" name="logForm" method="POST" action="'.$logUrl.'">
-          <p><b>Log url</b><br />';
-          $result .= '<p>'.$logUrl.'</p>
-          <button type="submit" id="logSubmit" name="logSubmit">Submit</button></form>';
-
-
-          $result .= '<form method ="POST" id="cleanForm" name="cleanForm" method="POST" action="'.$cleanDirUrl.'">
-          <p><b>Clean directory url</b><br />';
-          $result .= '<p>'.$cleanDirUrl.'</p>
-          <button type="submit" id="cleanSubmit" name="cleanSubmit">Submit</button></form>';  
-
+          $result .= '<p><b>Get log url</b><br />';
+          $result .= '<p><a href="'.$logUrl.'">'.$logUrl.'</a></p>';
+          $result .= '<p><b>Clean directory url</b><br />';
+          $result .= '<p><a href="'.$cleanDirUrl.'" target="_blank">'.$cleanDirUrl.'</a></p>';
 
           $result .= '</fieldset>';
           $result .= '</div>';
@@ -298,20 +235,14 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
           $apiUrlWithCustomConf=$baseUrl.'index.php/expertrec-feed?secret='.$this->_password.'&cmd=getpp&wid=1&sid=1';
 
-          $result .= '<form method="POST" action="'.$apiUrlWithCustomConf.'" name ="sug1form" id="sug1form">
-          <p><b>Without pagination</b><br />'; 
-          $result .= '<p>'.$apiUrlWithCustomConf.'</p>
-                      <button type="submit" name="sug1submit" id="sug1submit">Submit</button></form>';
+          $result .= '<p><b>Without pagination</b><br />'; 
+          $result .= '<p><a href="'.$apiUrlWithCustomConf.'">'.$apiUrlWithCustomConf.'</a></p>';
 
-          $result .= '<form method="POST" action="'.$apiUrlWithCustomConf.'&ps=1&pe=2" name ="sug1form" id="sug1form">
-          <p><b>With pagination without page size(default page size is 500)</b><br />'; 
-          $result .= '<p>'.$apiUrlWithCustomConf.'&ps=1&pe=2</p>
-          <button type="submit" name="sug1submit" id="sug1submit">Submit</button></form>';
+          $result .= '<p><b>With pagination without page size(default page size is 500)</b><br />'; 
+          $result .= '<p><a href="'.$apiUrlWithCustomConf.'&ps=1&pe=2">'.$apiUrlWithCustomConf.'&ps=1&pe=2</a></p>';
 
-          $result .= '<form method="POST" action="'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50" name ="sug2form" id="sug2form">
-          <p><b>With pagination & page size</b><br />'; 
-          $result .= '<p>'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50</p>
-          <button type="submit" name="sug2submit" id="sug2submit">Submit</button></form>';
+          $result .= '<p><b>With pagination & page size</b><br />'; 
+          $result .= '<p><a href="'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50">'.$apiUrlWithCustomConf.'&ps=1&pe=2&psize=50</a></p>';
 
           $result .= '</fieldset>';
           $result .= '</div>';
@@ -320,7 +251,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       }
 
       private function getAllAttributes(){
-          $attrArray = array('qty','is_in_stock','expert_image','expert_smallImage','expert_thumbnail','expert_category','expert_category_ids','expert_url','final_price','entity_id','attribute_set_id','type_id','entity_type_id','rating_summary');
+          $attrArray = array('qty','is_in_stock','expert_image','expert_smallImage','expert_thumbnail','expert_category','expert_url','final_price','entity_id','attribute_set_id','type_id','entity_type_id','rating_summary');
           $attributes = Mage::getResourceModel('catalog/product_attribute_collection')->getItems();
           
           foreach ($attributes as $attribute) {
@@ -346,11 +277,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           if (isset($storedHeaders)){
               $storedHeadersArray = explode(',', $storedHeaders);
           }
-          $storedFilters = Mage::getStoreConfig(self::CONFIG_FILTERS);
-
-          if(isset($storedFilters)){
-              $storedFiltersArray = explode(',', $storedFilters);
-          }
+          
           $result .= '<fieldset>';
           $result .= '<legend>Configure Feed Headers</legend>';
 
@@ -366,31 +293,8 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           }
 
           // adding image width and height
-          $result .= '<div style="display:block"><h4>Expertrec Image</h4><label for="imagewidth">Image Width</label><input type="text" id="imagewidth" name="imagewidth" placeholder="Give image width" value="'.Mage::getStoreConfig(self::IMAGE_WIDTH).'"></div>';
+          $result .= '<div style="display:block"><label for="imagewidth">Image Width</label><input type="text" id="imagewidth" name="imagewidth" placeholder="Give image width" value="'.Mage::getStoreConfig(self::IMAGE_WIDTH).'"></div>';
           $result .= '<div style="display:block"><label for="imageheight">Image Height</label><input type="text" id="imageheight" name="imageheight" placeholder="Give image height" value="'.Mage::getStoreConfig(self::IMAGE_HEIGHT).'"></div>';
-
-          // adding thumbnail width and height
-          $result .= '<div style="display:block"><h4>Expertrec Thumbnail</h4><label for="thumbnailwidth">Thumbnail Width</label><input type="text" id="thumbnailwidth" name="thumbnailwidth" placeholder="Give thumbnail width" value="'.Mage::getStoreConfig(self::THUMBNAIL_WIDTH).'"></div>';
-          $result .= '<div style="display:block"><label for="thumbnailheight">Thumbnail Height</label><input type="text" id="thumbnailheight" name="thumbnailheight" placeholder="Give thumbnail height" value="'.Mage::getStoreConfig(self::THUMBNAIL_HEIGHT).'"></div>';
-
-          $filterArray = array('filter_by_stock','filter_by_status','filter_by_visiblity');
-          
-          // filter_by_not_visible_individually','filter_by_visible_catalog','filter_by_visible_search','filter_by_visible_catalog_search'
-
-          $result .='<fieldset>';
-          $result .='<legend>Configure Filters</legend>';
-
-          foreach ($filterArray as $filter) { 
-              if (isset($storedFiltersArray) && in_array($filter, $storedFiltersArray)){
-                  $result .= '<input type="checkbox" id="'.$filter.'" name="filter_check_list[]" value="'.$filter.'" checked>';
-              }else{
-                  $result .= '<input type="checkbox" id="'.$filter.'" name="filter_check_list[]" value="'.$filter.'">';
-              }
-              $result .= '<label for="'.$filter.'">'.$filter.'</label>';
-          }
-          
-          $result .='</fieldset>';
-
 
           $result .= '<div style="text-align:center;margin:10px auto;"> ';
           $result .= '<input type="button" class="btn btn-md btn-primary" id="toggleSelect" value="Select All" onClick="toggle_select()" style="padding:5px; margin: 5px;"/>';
@@ -412,24 +316,6 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
 
           $result .= '</div>';  
           $result .= '</fieldset>';
-
-          if(!empty($storedFilters)){
-
-            $result .= '<fieldset style="margin-top:20px;">';
-            $result .= '<legend>Selected Filters</legend>';
-            $result .= '<div class="setHeadersForm">';
-
-                
-              if (isset($storedFiltersArray) && count($storedFiltersArray) > 0){
-                foreach ($storedFiltersArray as $filter) { 
-                  $result .= '<input type="checkbox" name="'.$filter.'" value="'.$filter.'" disabled checked>';
-                  $result .= '<label>'.$filter.'</label>';
-                }
-              }
-
-            $result .= '</div>';  
-            $result .= '</fieldset>';
-          }
 
           return $result;
       }
@@ -494,7 +380,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       private function displayFeedConf($baseUrl){
           $saveFeedApiUrl = $baseUrl."index.php/expertrec-feed/config/savefeedconf?secret=".$this->_password;
           $result = '<fieldset>';
-          $result .= '<legend>Configure Feed</legend>';
+          $result .= '<legend>Configure Search</legend>';
           $result .= '<form class="form-horizontal" action="'.$saveFeedApiUrl.'"  method="post" role="form" target="_blank">';
 
           $textArray = array("log_api"=>"Feed log endpoint", "upload_api"=>"Feed upload endpoint");

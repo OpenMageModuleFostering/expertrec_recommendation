@@ -24,7 +24,7 @@ class Expertrec_Recommendation_Model_Log {
     public function log($message, $level = Zend_Log::INFO, $bDeveloperModeOnly = false) {
         
         try{
-            $vFeedDir = "/tmp".self::FEED_PATH;
+            $vFeedDir = Mage::getBaseDir().self::FEED_PATH;
             if (!is_dir($vFeedDir)) {
                 $vFeedDir_status=mkdir($vFeedDir);
                 if(!$vFeedDir_status){

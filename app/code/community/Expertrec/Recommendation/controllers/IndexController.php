@@ -52,7 +52,7 @@
                   die('ERROR: The specified password is invalid.');
               }
 
-              $vFeedDir = "/tmp".self::FEED_PATH;
+              $vFeedDir = Mage::getBaseDir().self::FEED_PATH;
 
               //delete all files in Expertrec
               Mage::helper('expertrec_recommendation/filehelper')->cleanDir($vFeedDir);
@@ -75,7 +75,8 @@
           }
 
           //base Directory path
-          $logPath = "/tmp".self::FEED_PATH."/expertrec_feed.log";
+          $basePath = Mage::getBaseDir();
+          $logPath = $basePath.self::FEED_PATH."/expertrec_feed.log";
           $this->downloadFile($logPath);
           return;
         }catch (Exception $e) {

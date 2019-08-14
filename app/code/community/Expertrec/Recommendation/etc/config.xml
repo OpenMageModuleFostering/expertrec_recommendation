@@ -2,15 +2,20 @@
 <config>
     <modules>
         <Expertrec_Recommendation>
-            <version>1.0.13</version>
+            <version>1.1.0</version>
         </Expertrec_Recommendation>
     </modules>
     <global>
         <models>
             <expertrec_recommendation>
                 <class>Expertrec_Recommendation_Model</class>
-            </expertrec_recommendation>
-        </models>
+            </expertrec_recommendation>            
+            <catalogsearch>
+                <rewrite>
+                    <layer>Expertrec_Recommendation_Model_Catalogsearch_Layer</layer>
+                </rewrite>
+            </catalogsearch>
+        </models>        
         <helpers>
             <expertrec_recommendation>
                 <class>Expertrec_Recommendation_Helper</class>
@@ -19,14 +24,12 @@
         <blocks>
             <expertrec_recommendation>
                 <class>Expertrec_Recommendation_Block</class>
-            </expertrec_recommendation>
+            </expertrec_recommendation>            
         </blocks>
         <resources>
             <expertrec_setup>
                 <setup>
                     <module>Expertrec_Recommendation</module>
-                    <class>Expertrec_Recommendation_Model_Resource_Mysql4_Setup</class>
-
                 </setup>
             </expertrec_setup>
         </resources>
@@ -75,16 +78,6 @@
                     </expertrec_recommendation_stockupdate>
                 </observers>
             </catalog_product_save_commit_after>
-            <!-- Hook on New Category and Category Edit -->
-            <catalog_category_save_commit_after>
-                <observers>
-                    <expertrec_recommendation_save_category>
-                        <type>singleton</type>
-                        <class>expertrec_recommendation/observer</class>
-                        <method>saveCategory</method>
-                    </expertrec_recommendation_save_category>
-                </observers>
-            </catalog_category_save_commit_after>
         </events>        
     </global>    
     <frontend>
@@ -110,7 +103,6 @@
                     <frontName>expertrec-signup</frontName>
                 </args>
             </expertrec-signup>
-            <!-- added support email -->           
             <expertrec>
                 <use>standard</use>
                 <args>
@@ -120,17 +112,6 @@
                     <frontName>expertrec</frontName>
                 </args>
             </expertrec>
-        </routers>
-        <events>
-            <controller_action_layout_load_before>
-                <observers>
-                    <expertrec_search>
-                        <type>singleton</type>
-                        <class>expertrec_recommendation/observer</class>
-                        <method>useExpertrecSearch</method>
-                    </expertrec_search>
-                </observers>
-            </controller_action_layout_load_before>
-        </events>
+        </routers>        
     </frontend>
 </config>

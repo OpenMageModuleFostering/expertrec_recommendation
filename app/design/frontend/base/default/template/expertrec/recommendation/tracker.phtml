@@ -4,7 +4,7 @@
 <?php $category = Mage::registry("current_category");?>
 <?php
 $formKey = '';
-
+$currencyRates = array();
 try{
     $formkey_html = $this->getBlockHtml('formkey');
     $pattern = '/.*form_key.*value=\"([^\"]+)\"/s';
@@ -13,6 +13,13 @@ try{
          $formKey = $match[1];
         }
     }
+
+    //currency rate
+    $baseCurrencyCode = Mage::app()->getBaseCurrencyCode();
+    $allowedCurrencies = Mage::getModel('directory/currency')->getConfigAllowCurrencies();
+    $currencyRates = Mage::getModel('directory/currency')
+                        ->getCurrencyRates($baseCurrencyCode, array_values($allowedCurrencies));
+
 } catch (Exception $e){
     Mage::logException($e);
 }
@@ -26,6 +33,9 @@ if(typeof expertSiteConf == 'undefined' || expertSiteConf == null) {
         <?php if (isset($category)) { ?>
             ,category:"<?php echo $category->getName(); ?>"
         <?php } ?>
+        <?php if (!empty($currencyRates)) { ?>
+            ,rates: <?php echo json_encode($currencyRates); ?>
+        <?php } ?>
     };
 }
 
@@ -36,3 +46,4 @@ if(typeof expertSiteConf == 'undefined' || expertSiteConf == null) {
 
 </script>
 <?php  ?>
+
