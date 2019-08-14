@@ -174,7 +174,7 @@ class Expertrec_Recommendation_Helper_Searchhelper extends Mage_Core_Helper_Abst
         $confArray["query"] = $requestParams['q'];   
         //$confArray["facetPortion"] = $this->getNonQueryUrlParameters($confArray["url"]);
 
-        //setup search url
+        //setup search url, if search URL is not empty
         $searchApi = $this->getSearchApi($confArray);      
 
         if(!empty($searchApi)){
@@ -182,27 +182,36 @@ class Expertrec_Recommendation_Helper_Searchhelper extends Mage_Core_Helper_Abst
             //sending request
             $resp = Mage::helper('expertrec_recommendation')->sendCurl($searchApi);
             $response_json = json_decode($resp,true);
-            
-            if(isset($response_json["res"]) && isset($response_json["res"]["count"])){
-              $confArray["count"] = (int)$response_json["res"]["count"];
-            }
-            
-            //Initiate search layout
-            $layoutHelper = Mage::helper('expertrec_recommendation/search_layout')->init($confArray);
-            
-            $searchListData = $response_json["results"];
-            $itemIds = array();
 
-            if(isset($searchListData))
+            // checking for url-resp            
+           if(isset($response_json["redirect"]) && isset($response_json["redirect_url"])){
+                Mage::app()->getResponse()->setRedirect($response_json["redirect_url"]);          
+
+            }
+            else
             {
-              Mage::getSingleton('expertrec_recommendation/log')->log("Number of items returned by Expertrec BE ".count($searchListData));
+                if(isset($response_json["res"]) && isset($response_json["res"]["count"])){
+                  $confArray["count"] = (int)$response_json["res"]["count"];
+                  Mage::getSingleton('expertrec_recommendation/log')->log("The json data is valid");
+                }
+                              
+                //Initiate search layout
+                $layoutHelper = Mage::helper('expertrec_recommendation/search_layout')->init($confArray);
+                
+                $searchListData = $response_json["results"];
+                $itemIds = array();
 
-              foreach ($searchListData as $item) {
-                $itemIds[] = $item['entity_id'];
+                if(isset($searchListData))
+                {
+                  Mage::getSingleton('expertrec_recommendation/log')->log("Number of items returned by Expertrec BE ".count($searchListData));
+
+                  foreach ($searchListData as $item) {
+                    $itemIds[] = $item['entity_id'];
+                  }
+                }
+               
+                $this->_resultIds = $itemIds;
               }
-            }
-           
-            $this->_resultIds = $itemIds;
           }
 
       }catch (Exception $e) {

@@ -14,4 +14,14 @@
             <action method="setTemplate"><template>page/1column.phtml</template></action>
         </reference>        
     </expertrec_custom_autocomplete>
+    <!--route the infoAction function in ApiController to info.phtml, which can access Api.php block functions-->
+    <expertrec_recommendation_api_info>
+        <reference name="root">
+            <action method="setTemplate"><template>page/1column.phtml</template></action>
+        </reference>
+         <reference name="content">
+            <block type="expertrec_recommendation/api" name="expertrec_feed1" 
+                template="expertrec/feed/info.phtml"/>
+        </reference>
+    </expertrec_recommendation_api_info>
 </layout>

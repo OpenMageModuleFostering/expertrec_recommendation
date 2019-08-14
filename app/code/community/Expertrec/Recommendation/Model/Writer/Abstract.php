@@ -30,7 +30,7 @@ abstract class Expertrec_Recommendation_Model_Writer_Abstract extends Varien_Obj
     abstract function close();
 
     protected function _getFilename($vStoreCode, $vFeedname) {
-        $vFeedDir = Mage::getBaseDir().self::FEED_PATH;
+        $vFeedDir = "/tmp".self::FEED_PATH;
         if (!is_dir($vFeedDir)) {
             $vFeedDir_status=mkdir($vFeedDir);
             if(!$vFeedDir_status){

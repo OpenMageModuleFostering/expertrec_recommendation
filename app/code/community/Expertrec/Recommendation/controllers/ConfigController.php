@@ -60,74 +60,106 @@ class Expertrec_Recommendation_ConfigController extends Mage_Core_Controller_Fro
                   
       }
 
-      public function saveheadersAction(){
-          try{
-              $requestParams = Mage::app()->getRequest()->getParams();
-              $Password = isset($requestParams['secret']) ? $requestParams['secret'] : '';
+public function saveheadersAction(){
+  try{
+    $requestParams = Mage::app()->getRequest()->getParams();
+    $Password = isset($requestParams['secret']) ? $requestParams['secret'] : '';
+    // Check password. if invalid password, it will not proceed.
+    if(!Mage::getModel('expertrec_recommendation/validate')->checkPassword($Password)){
+      die('ERROR: The specified password is invalid.');
+    }
+    $attrArray = array();
+    if(isset($requestParams['selected_headers'])){
+      if(!empty($requestParams['check_list'])){
+        foreach($requestParams['check_list'] as $selected){
+          $attrArray[] = $selected;
+        }
 
-              // Check password. if invalid password, it will not proceed.
-              if(!Mage::getModel('expertrec_recommendation/validate')->checkPassword($Password)){
-                  die('ERROR: The specified password is invalid.');
+        if(count($attrArray) > 0){
+        // check for field expert_image
+          if(in_array("expert_image", $attrArray)){
+            if(isset($requestParams['imagewidth']) ? $requestParams['imagewidth'] : ''){
+              $imageWidth = $requestParams['imagewidth'];
+              Mage::helper("expertrec_recommendation")
+              ->saveConfig('expertrec_image_width',$imageWidth);
+              echo "Image Width updated</br>";
               }
-
-              $attrArray = array();
-              if(isset($requestParams['selected_headers'])){
-
-                  if(!empty($requestParams['check_list'])){
-                      
-                      foreach($requestParams['check_list'] as $selected){
-                          $attrArray[] = $selected;
-                          
-                      }
-
-                      if(count($attrArray) > 0){
-
-                        // check for field expert_image
-                        if(in_array("expert_image", $attrArray)){
-
-                          if(isset($requestParams['imagewidth']) ? $requestParams['imagewidth'] : ''){
-                            $imageWidth = $requestParams['imagewidth'];
-                            Mage::helper("expertrec_recommendation")
-                                ->saveConfig('expertrec_image_width',$imageWidth);
-                            echo "Image Width updated</br>";
-                          }
-                          else{
-                            Mage::helper("expertrec_recommendation")
-                                ->saveConfig('expertrec_image_width','');
-                            echo "Not Updating Image Width</br>";
-                          }
-                          if(isset($requestParams['imageheight']) ? $requestParams['imageheight'] : ''){
-                            $imageHeight = $requestParams['imageheight'];
-
-                            // store image width and height
-                            Mage::helper("expertrec_recommendation")
-                              ->saveConfig('expertrec_image_height',$imageHeight);
-                            echo "Image Height updated</br>";
-                          }
-                          else{
-                            Mage::helper("expertrec_recommendation")
-                                ->saveConfig('expertrec_image_height','');
-                            echo "Not Updating Image Height</br>";
-                          }
-
-                        }
-
-                          //store headers then clear cache
-                          Mage::helper("expertrec_recommendation")
-                                  ->saveConfig('headers',implode(',', $attrArray))
-                                  ->clearCache();
-                                  
-                          die("Successfully updated selected headers. Please close this tab and reload the info page.");
-                      }
-                  }        
-              }
-              die("Invalid request");
-
-          }catch(Exception $e){
-              Mage::getSingleton('expertrec_recommendation/log')->log("Updating feed header error: ".$e->getMessage());
-              die("Unable to update headers");
+            else{
+              Mage::helper("expertrec_recommendation")
+              ->saveConfig('expertrec_image_width','');
+              echo "Not Updating Image Width</br>";
+            }
+            if(isset($requestParams['imageheight']) ? $requestParams['imageheight'] : ''){
+              $imageHeight = $requestParams['imageheight'];
+              // store image width and height
+              Mage::helper("expertrec_recommendation")
+              ->saveConfig('expertrec_image_height',$imageHeight);
+              echo "Image Height updated</br>";
+            }
+            else{
+              Mage::helper("expertrec_recommendation")
+              ->saveConfig('expertrec_image_height','');
+              echo "Not Updating Image Height</br>";
+            }
           }
+
+          // check for field expert_thumbnail
+          if(in_array("expert_thumbnail", $attrArray)){
+            if(isset($requestParams['thumbnailwidth']) ? $requestParams['thumbnailwidth'] : ''){
+              $thumbnailWidth = $requestParams['thumbnailwidth'];
+              Mage::helper("expertrec_recommendation")
+              ->saveConfig('expertrec_thumbnail_width',$thumbnailWidth);
+              echo "Thumbnail Width updated</br>";
+              }
+            else{
+              Mage::helper("expertrec_recommendation")
+              ->saveConfig('expertrec_thumbnail_width','');
+              echo "Not Updating Thumbnail Width</br>";
+            }
+            if(isset($requestParams['thumbnailheight']) ? $requestParams['thumbnailheight'] : ''){
+              $thumbnailHeight = $requestParams['thumbnailheight'];
+              // store thumbnail width and height
+              Mage::helper("expertrec_recommendation")
+              ->saveConfig('expertrec_thumbnail_height',$thumbnailHeight);
+              echo "Thumbnail Height updated</br>";
+            }
+            else{
+              Mage::helper("expertrec_recommendation")
+              ->saveConfig('expertrec_thumbnail_height','');
+              echo "Not Updating Thumbnail Height</br>";
+            }
+          }
+
+          //store headers then clear cache
+          Mage::helper("expertrec_recommendation")
+          ->saveConfig('headers',implode(',', $attrArray))
+          ->clearCache();
+        }
+        if(!empty($requestParams['filter_check_list'])){
+          foreach($requestParams['filter_check_list'] as $selected){
+            $filterArray[] = $selected;
+          } 
+          //store headers then clear cache
+          Mage::helper("expertrec_recommendation")
+          ->saveConfig('filters',implode(',', $filterArray))
+          ->clearCache();
+          die("Successfully updated selected headers and filters. Please close this tab and reload the info page.");
+          }
+        else{
+          Mage::helper("expertrec_recommendation")
+          ->saveConfig('filters','')
+          ->clearCache();
+          die("Successfully updated selected headers. Please close this tab and reload the info page.");
+        }
       }
+    }
+    die("Invalid request");
+  }
+  catch(Exception $e){
+    Mage::getSingleton('expertrec_recommendation/log')->log("Updating feed header error: ".$e->getMessage());
+    die("Unable to update headers");
+  }
+}
 
       public function savefeedconfAction(){
           try{
@@ -141,13 +173,8 @@ class Expertrec_Recommendation_ConfigController extends Mage_Core_Controller_Fro
 
               $feedConfArray = array();
               if(isset($requestParams['feed_conf'])){
-                  if(!empty($requestParams['log_api'])){
-                      $feedConfArray[self::FEED_LOG_ENDPOINT] = $requestParams['log_api'];
-                  }
-
-                  if(!empty($requestParams['upload_api'])){
-                      $feedConfArray[self::FEED_UPLOAD_ENDPOINT] = $requestParams['upload_api'];
-                  }
+                  $feedConfArray[self::FEED_LOG_ENDPOINT] = isset($requestParams['log_api']) ? $requestParams['log_api'] : '';
+                  $feedConfArray[self::FEED_UPLOAD_ENDPOINT] = isset($requestParams['upload_api']) ? $requestParams['upload_api'] : '';                 
 
                   if(!empty($requestParams['upload_feed'])){
                     $feedConfArray["is_upload"] = "true";
@@ -190,9 +217,7 @@ class Expertrec_Recommendation_ConfigController extends Mage_Core_Controller_Fro
 
               if(isset($requestParams['selected_search'])){
 
-                  if(!empty($requestParams['api'])){
-                      $searchConfArray[self::SEARCH_LIST_API] = $requestParams['api'];
-                  }
+                $searchConfArray[self::SEARCH_LIST_API] = isset($requestParams['api'])?$requestParams['api']:'';
                   
                   $searchConfArray[self::SEARCH_FACET_LIST] = isset($requestParams['facet_list']) ? $requestParams['facet_list'] : '';
                   

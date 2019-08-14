@@ -94,7 +94,7 @@ class Expertrec_Recommendation_Model_Catalogsearch_Layer extends Mage_CatalogSea
                     $collection->getSelect()->order("find_in_set(e.entity_id, '" . implode(',', $product_ids)."') DESC");
                 }
             }
-
+            
             Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($collection);
             Mage::getSingleton('catalog/product_visibility')->addVisibleInSearchFilterToCollection($collection);
         }

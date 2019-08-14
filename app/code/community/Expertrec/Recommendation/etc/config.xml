@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Expertrec_Recommendation>
-            <version>1.1.3</version>
+            <version>1.1.4</version>
         </Expertrec_Recommendation>
     </modules>
     <global>
@@ -83,6 +83,16 @@
                     </expertrec_recommendation_stockupdate>
                 </observers>
             </catalog_product_save_commit_after>
+            <!-- Hook on New Category and Category Edit -->
+            <catalog_category_save_commit_after>
+                <observers>
+                    <expertrec_recommendation_save_category>
+                        <type>singleton</type>
+                        <class>expertrec_recommendation/observer</class>
+                        <method>saveCategory</method>
+                    </expertrec_recommendation_save_category>
+                </observers>
+            </catalog_category_save_commit_after>
         </events>        
     </global>    
     <frontend>
@@ -108,6 +118,7 @@
                     <frontName>expertrec-signup</frontName>
                 </args>
             </expertrec-signup>
+            <!-- added support email -->           
             <expertrec>
                 <use>standard</use>
                 <args>

@@ -65,7 +65,9 @@ class Expertrec_Recommendation_Helper_Data extends Mage_Core_Helper_Abstract {
     }
 
     public function sendCurl($command){
-        if (isset($ch)) {
+        
+        if (isset($ch)) 
+        {
             unset($ch);
         }
 
@@ -75,8 +77,24 @@ class Expertrec_Recommendation_Helper_Data extends Mage_Core_Helper_Abstract {
             curl_setopt($ch, CURLOPT_HEADER, 0);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($ch, CURLOPT_FRESH_CONNECT, 1);
+            curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
+            curl_setopt($ch, CURLOPT_TIMEOUT_MS, 65000);
             $str = curl_exec($ch);
-        } else {
+            $curl_errno = curl_errno($ch);
+            $curl_error = curl_error($ch);
+            curl_close($ch);
+
+            if ($curl_errno > 0)
+            {
+                Mage::getSingleton("expertrec_recommendation/log")->log("cURL Error ($curl_errno): ".$curl_error);
+            } 
+            else 
+            {
+                Mage::getSingleton("expertrec_recommendation/log")->log("Data received:");
+            }            
+        } 
+        else 
+        {
             $str = 'failed';
         }
 

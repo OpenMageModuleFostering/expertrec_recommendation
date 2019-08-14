@@ -169,6 +169,7 @@ class Expertrec_Recommendation_Model_Observer {
             ->setPrepareRequestStatus(false)
             ->setUserId('expertrec')
             ->setUrl($finalUrl)
+            ->setMethod(Zend_Http_Client::DELETE)
             ->setData(array('item' => $product->getId()))
             ->setPrepareRequestStatus(true)
             ->sendRequest();
@@ -205,7 +206,9 @@ class Expertrec_Recommendation_Model_Observer {
             }
 
             if(!empty($header)){
-                $finalUrl = $this->getFeedEndpoint();
+                // passing product to identify product url
+                $feedUrl = $this->getFeedEndpoint();
+                $finalUrl = $feedUrl.'/product';
                 if(empty($finalUrl)){
                     return $this;
                 }
@@ -234,6 +237,64 @@ class Expertrec_Recommendation_Model_Observer {
             $logger->log("SaveCatalogProduct_Track error: ".$e->getMessage());
         }
         return $this;
+    }
+
+    /**
+     * Method to track save Category
+     */
+
+     public function saveCategory($observer){
+        $logger = Mage::getSingleton('expertrec_recommendation/log');
+        $category = $observer->getEvent()->getCategory();
+
+        $logger->log("Hook on category after save");
+
+        // get category url
+        $store = Mage::app()->getStore();
+        $category_url = $store->getBaseUrl().$category->getUrlPath();
+
+        // get path with name
+        $pathIdArray = explode('/', $category->getPath());
+        $storeId = $store->getId();
+        $pathNameArray = array();
+
+        for($i=0;$i<count($pathIdArray);$i++){
+            $categoryy = Mage::getModel('catalog/category')->setStoreId($storeId)->load($pathIdArray[$i]);
+            $pathNameArray[$i] = $categoryy->getName();
+        }
+        //removing Root catalog which is $pathNameArrray[0]
+        array_shift($pathNameArray);
+        $category_path = implode('/', $pathNameArray);
+
+        $categoryArray = array('categoryId' => $category->getId(),
+                               'categoryName' => $category->getName(),
+                               'categoryPath' => $category_path,
+                               'categoryUrl' => $category_url);
+
+        // passing category to identify category url
+        $feedUrl = $this->getFeedEndpoint();
+        $finalUrl = $feedUrl.'/category';
+        if(empty($finalUrl)){
+            return $this;
+        }
+
+        //sending request
+        $response = Mage::getModel('expertrec_recommendation/api_request')
+            ->setPrepareRequestStatus(false)
+            ->setUserId('expertrec')
+            ->setUrl($finalUrl)
+            ->setMethod(Zend_Http_Client::POST)
+            ->setData($categoryArray)
+            ->setHeader("Content-Type",'application/json')
+            ->setPrepareRequestStatus(true)
+            ->sendRequest();
+
+        if(!$response) {
+            $logger->log('request failed for category with Id #'.$category->getId());
+        }
+        
+        return $this;
+
     }
 
     protected function getFeedEndpoint(){
