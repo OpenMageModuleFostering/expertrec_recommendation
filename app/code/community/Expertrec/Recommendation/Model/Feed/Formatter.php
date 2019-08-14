@@ -46,7 +46,10 @@
                         //$url = Mage::getBaseUrl().$product->url_path;
                         //Stripping the parts of the getpayload, only URL needed
                         $url =$product->getUrlInStore(array('_ignore_category' => true));
-                        $url = substr($url,0,strpos($url,"?"));
+                        // $url = substr($url,0,strpos($url,"?"));
+                        // substring gives null on split with '?' if it is not there
+                        $url_array = explode('?', $url);
+                        $url = $url_array[0];
                         //Mage::getSingleton('expertrec_recommendation/log')->log("Getting product url ".$url);
                         $vValue=$url;
                         break;
