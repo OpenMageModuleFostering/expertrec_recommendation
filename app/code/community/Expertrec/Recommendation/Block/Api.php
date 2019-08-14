@@ -170,6 +170,13 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
                     }catch(Exception $e){
                         $websiteStoreRow["pcounterr"] = $e.getMessage();
                     }
+                    try{
+                        $filteredCollection = $feedFilter->addBasicFilter($website,$oStore);
+                        $websiteStoreRow["fcount"] = $filteredCollection->getSize();
+
+                    }catch(Exception $e){
+                        $websiteStoreRow["fcounterr"] = $e.getMessage();
+                    }
 
                     array_push($websiteStoreData,$websiteStoreRow);                    
             }
@@ -220,8 +227,8 @@ class Expertrec_Recommendation_Block_Api extends Mage_Core_Block_Template{
       "search_enable"=>self::SEARCH_LIST_ENABLE,
       "fetch_price"=>self::SEARCH_FETCH_PRICE,
       "convert_price"=>self::SEARCH_CONVERT_PRICE,
-      "is_ajax"=>self::SEARCH_IS_AJAX,
-      "custom_template"=>self::SEARCH_CUSTOM_TEMPLATE);
+      "is_ajax"=>self::SEARCH_IS_AJAX);
+      // "custom_template"=>self::SEARCH_CUSTOM_TEMPLATE);
 
     foreach ($chekboxArray as $cKey => $cValue)
      {      

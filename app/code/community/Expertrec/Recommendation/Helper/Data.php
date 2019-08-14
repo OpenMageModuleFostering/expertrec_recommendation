@@ -50,7 +50,7 @@ class Expertrec_Recommendation_Helper_Data extends Mage_Core_Helper_Abstract {
         $path = self::CONFIG_PREFIX . '/' . $key; 
         Mage::getConfig()->saveConfig(rtrim($path, '/'), (string)$value, $scope, $scopeId);
         
-        Mage::getSingleton('expertrec_recommendation/log')->log( "Successfully updated : <".$key."> in core_config_data table.");
+        // Mage::getSingleton('expertrec_recommendation/log')->log( "Successfully updated : <".$key."> in core_config_data table.");
         return $this;
     }
 
@@ -90,7 +90,7 @@ class Expertrec_Recommendation_Helper_Data extends Mage_Core_Helper_Abstract {
             } 
             else 
             {
-                Mage::getSingleton("expertrec_recommendation/log")->log("Data received:");
+                // Mage::getSingleton("expertrec_recommendation/log")->log("Data received:");
             }            
         } 
         else 

@@ -29,7 +29,7 @@ class Expertrec_Recommendation_Model_Translator_Category {
                 $curPath=$this->_getCategoryIdPath($category_id);
             }
             
-            if(!empty($curPath) && !in_array($curPath, $categoryPathArray)){
+            if(!empty($curPath)){
               $categoryPathArray[] = $curPath;
             }
         }

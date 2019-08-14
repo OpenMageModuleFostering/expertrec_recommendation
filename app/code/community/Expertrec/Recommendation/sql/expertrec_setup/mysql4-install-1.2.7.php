@@ -5,8 +5,10 @@
 
 $installer = $this;
 $mage_ver = Mage::getVersion();
+$php_ver = phpversion();
 $host = $_SERVER['HTTP_HOST'];
-$uri = $_SERVER['REQUEST_URI'];
+$uri = $_SERVER['SCRIPT_NAME'];
+$protocol = $_SERVER['REQUEST_SCHEME'];
 $installer->startSetup();
 
 $result =array();
@@ -15,10 +17,12 @@ $result['status'] = "Installed";
 //magento version
 $result['mage_ver'] = $mage_ver;
 //expertrec version
-$result['expertrec_ver'] = '1.2.6';
+$result['expertrec_ver'] = '1.2.7';
+$result['php_ver'] = $php_ver;
 //Subdomain
 $result['site_subdomain'] = $uri;
 //hostname 
+$result['site_protocol'] = $protocol;
 $result['site_host'] = $host;
 //selecting for site_details
 $site_data = $installer->getConnection()->fetchAll("select * from {$this->getTable('core_config_data')} where `path` like '%trans_email%'");
@@ -63,7 +67,8 @@ $installer->run("
     ('default',0,'expertrec/general/expertrec_thumbnail_width',80),
     ('default',0,'expertrec/general/expertrec_thumbnail_height',80),
     ('default',0,'expertrec/general/expertrec_feed_push',0),
-    ('default',0,'expertrec/general/filters','filter_by_stock,filter_by_status,visible_catalog,visible_search,visible_catalog_search')
+    ('default',0,'expertrec/general/expertrec_feed_pushed_pages','0,0,0'),
+    ('default',0,'expertrec/general/filters','filter_by_stock,filter_by_status')
     ON DUPLICATE KEY UPDATE `value`=`value`;
 ");
 

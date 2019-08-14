@@ -22,11 +22,11 @@ class Expertrec_Recommendation_Model_Feed_Feedcreator {
         try{
             $logger->log("Beginning $vFeedname export for store #".$oStore->getId()." - ".$oStore->getName());
             $logger->logMemoryUsage();
-            $logger->log("Initialising file writers...");
+            // $logger->log("Initialising file writers...");
             $this->initWriters($oStore, $vFeedname);
 
             // Prepare the csv file header
-            $logger->log("Begin preparing header rows...");
+            // $logger->log("Begin preparing header rows...");
             $logger->logMemoryUsage();
 
             //if any error occur during header writing, it will return false
@@ -35,10 +35,10 @@ class Expertrec_Recommendation_Model_Feed_Feedcreator {
             }
 
             // Initialise the formatter
-            $logger->log("Initialising Feed Formatter...");
+            // $logger->log("Initialising Feed Formatter...");
             $formatter = Mage::getSingleton('expertrec_recommendation/feed_formatter');
             $formatter->init();
-            $logger->log("Initialised Feed Formatter.");
+            // $logger->log("Initialised Feed Formatter.");
 
             $logger->logMemoryUsage();
 

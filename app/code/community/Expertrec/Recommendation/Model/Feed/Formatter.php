@@ -50,15 +50,6 @@ class Expertrec_Recommendation_Model_Feed_Formatter {
                 case 'qty':
                     $vValue = (int)$product->getData("qty");
                     break;
-                // case 'filter_by_stock':
-                //     $vValue = 0;
-                //     break;
-                // case 'filter_by_status':
-                //     $vValue = 2;
-                //     break;
-                // case 'filter_by_visiblity':
-                //     $vValue = array(1,2,3,4);
-                //     break;
                 default:
                     $attributedata = Mage::getSingleton("eav/config")->getAttribute('catalog_product', $skey)->getData();
                     $vValue =$product->getData($skey);

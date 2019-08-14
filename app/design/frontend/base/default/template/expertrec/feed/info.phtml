@@ -90,6 +90,7 @@
 	                          <th>Store Name</th>
 	                          <th>Store Language</th>
 	                          <th>Total# Products</th>
+	                          <th>Filtered Products</th>
 	                          <th>Url</th>
 	                        </tr>
 	                    </thead>
@@ -108,7 +109,15 @@
 	                    		    <td style="text-align:center;"><b style="color:red;">Error: </b>
 	                    		    	<?php echo $_item['pcounterr'] ?>
 	                    		    </td>
-	                    	    <?php endif;?>    	    
+	                    	    <?php endif;?> 
+	                    	    <?php if(isset($_item['fcount'])): ?>
+	                    	        <td style="text-align:center;"><?php echo $_item['fcount'] ?></td>
+	                    		<?php endif;?> 
+	                    		<?php if(isset($_item['fcounterr'])): ?>
+	                    		    <td style="text-align:center;"><b style="color:red;">Error: </b>
+	                    		    	<?php echo $_item['fcounterr'] ?>
+	                    		    </td>
+	                    	    <?php endif;?>  	    
 	                    	    
 	                    	    <!-- <td><a href = "<?php //echo $_item['surl'] ?>"><?php //echo $_item['surl'] ?></a></td> -->
 	                    	    <!-- form post request -->
@@ -364,7 +373,7 @@
             		</form>
             	</fieldset>
             	<!--Displaying selected headers-->
-            	<?php if(!empty($storedHeaders) &&
+            	<?php if($storedHeaders != "" &&
             	isset($storedHeaders) && count($storedHeaders) > 0): ?>
 	            	<fieldset style="margin-top:20px;">
 	            	    <legend>Selected Headers</legend>
@@ -376,8 +385,10 @@
 	            			</div>
 	            	</fieldset>
                <?php endif;?>
+
             	<!--Displaying selected filters-->
-            	<?php if(!empty(Mage::getStoreConfig('expertrec/general/filters')) &&
+            	<?php $filter = Mage::getStoreConfig('expertrec/general/filters');
+            		  if($filter != "" &&
             	      isset($storedFilters) && count($storedFilters) > 0): ?>
 	            	<fieldset style="margin-top:20px;">
 	            	    <legend>Selected Filters</legend>

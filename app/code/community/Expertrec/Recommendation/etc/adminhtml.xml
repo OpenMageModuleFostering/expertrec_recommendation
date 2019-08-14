@@ -11,7 +11,7 @@
                     <action>expertrec-signup</action>
                 </expertrec>
                 <!-- added user upload feed -->
-                <feed>
+                <feed translate="title">
                     <title>Upload Feed</title>
                     <sort_order>15</sort_order>
                     <action>expertrec_recommendation/api/feed</action>

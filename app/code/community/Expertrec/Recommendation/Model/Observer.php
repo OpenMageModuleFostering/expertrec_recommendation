@@ -325,7 +325,7 @@ class Expertrec_Recommendation_Model_Observer {
         $logger = Mage::getSingleton('expertrec_recommendation/log');
         $category = $observer->getEvent()->getCategory();
 
-        $logger->log("Hook on category after save");
+        // $logger->log("Hook on category after save");
 
         // get category url
         $store = Mage::app()->getStore();
@@ -344,9 +344,13 @@ class Expertrec_Recommendation_Model_Observer {
         array_shift($pathNameArray);
         $category_path = implode('/', $pathNameArray);
 
+        array_shift($pathIdArray);
+        $category_id_path = implode('/', $pathIdArray);
+
         $categoryArray = array('categoryId' => $category->getId(),
                                'categoryName' => $category->getName(),
-                               'categoryPath' => $category_path,
+                               'categoryIdPath' => $category_id_path,
+                               'categoryNamePath' => $category_path,
                                'categoryUrl' => $category_url);
 
         // passing category to identify category url
@@ -381,9 +385,6 @@ class Expertrec_Recommendation_Model_Observer {
             ->setHeader("Content-Type",'application/json')
             ->setPrepareRequestStatus(true)
             ->sendRequest();
-
-
-
 
         if(!$response) {
             $logger->log('request failed for category with Id #'.$category->getId());
@@ -453,62 +454,62 @@ class Expertrec_Recommendation_Model_Observer {
     // }
     
 
-    //public function addWishlist(Varien_Event_Observer $observer) {
+    public function addWishlist(Varien_Event_Observer $observer) {
 
-        //$wishListItemCollection = $observer->getItems();
-        //if (count($wishListItemCollection)) {
-            //$arrProductIds = array();
-            //foreach ($wishListItemCollection as $item) {
+        $wishListItemCollection = $observer->getItems();
+        if (count($wishListItemCollection)) {
+            $arrProductIds = array();
+            foreach ($wishListItemCollection as $item) {
                 /* @var $product Mage_Catalog_Model_Product */
-              //  $product = $item->getProduct();
+                $product = $item->getProduct();
                 // $arrProductIds[] = $product->getId();
-            //}
-        //}else{
-        //    Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: wishListItemCollection count is 0',Zend_Log::ERR);
-        //return $this;
-        //}
+            }
+        }else{
+            Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: wishListItemCollection count is 0',Zend_Log::ERR);
+        return $this;
+        }
 
-        //if(!$product instanceof Mage_Catalog_Model_Product) {
-        //    Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: product is not a valid type',Zend_Log::ERR);
-        //    return $this;
-        //}
+        if(!$product instanceof Mage_Catalog_Model_Product) {
+            Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: product is not a valid type',Zend_Log::ERR);
+            return $this;
+        }
 
         // added url to track rtr
-        //$lastUrl = Mage::getSingleton('core/session')->getLastUrl();
-        //$currUrl = Mage::helper('core/url')->getCurrentUrl();
-        //$ci_id = $_COOKIE['ci_id'];
+        $lastUrl = Mage::getSingleton('core/session')->getLastUrl();
+        $currUrl = Mage::helper('core/url')->getCurrentUrl();
+        $ci_id = $_COOKIE['ci_id'];
 
         // Mage::getSingleton('core/session')->setCartLastUrl($lastUrl);
         // Mage::getSingleton('core/session')->setCartCurrUrl($currUrl);
 
         //return unique product id
-        //$uniqueId = Mage::helper('expertrec_recommendation')->getUniqueId($product);
+        $uniqueId = Mage::helper('expertrec_recommendation')->getUniqueId($product);
         
         //sending request
         //return boolean
-        //$response = Mage::getModel('expertrec_recommendation/api_request')
-          //  ->setPrepareRequestStatus(false)
-          //  ->setData(array(
-          //          'ci_id' => $ci_id,
-          //          'lastUrl' => $lastUrl,
-          //          'currUrl' => $currUrl,
-          //          'item' => $uniqueId,
-          //          'event' => 17,
-          //          'sku' => $product->getSku(),
-          //          'domain' => $_SERVER['HTTP_HOST'],
-          //          'ip' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'])
+        $response = Mage::getModel('expertrec_recommendation/api_request')
+            ->setPrepareRequestStatus(false)
+            ->setData(array(
+                    'ci_id' => $ci_id,
+                    'lastUrl' => $lastUrl,
+                    'currUrl' => $currUrl,
+                    'item' => $uniqueId,
+                    'event' => 17,
+                    'sku' => $product->getSku(),
+                    'domain' => $_SERVER['HTTP_HOST'],
+                    'ip' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'])
 
-          //      )
-          //  ->setHeader("User-Agent",$_SERVER['HTTP_USER_AGENT'])
-          //  ->prepareRequest()
-          //  ->sendRequest();
+                )
+            ->setHeader("User-Agent",$_SERVER['HTTP_USER_AGENT'])
+            ->prepareRequest()
+            ->sendRequest();
 
         // Mage::getSingleton('expertrec_recommendation/log')->log("AddToWishlist_Track: request made with uniqueId ".$uniqueId);
-        //if(!$response) {
-          //  Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: request failed for product with uniqueId #'.$uniqueId,Zend_Log::ERR);
-        //}
-        //return $this;
-    //}
+        if(!$response) {
+            Mage::getSingleton('expertrec_recommendation/log')->log('AddToWishlist_Track: request failed for product with uniqueId #'.$uniqueId,Zend_Log::ERR);
+        }
+        return $this;
+    }
 
 
 
