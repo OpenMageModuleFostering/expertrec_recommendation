@@ -26,8 +26,8 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
       const CONFIG_SECRET  = 'expertrec/general/secret';
       const PUSHED_FEED_PAGES = 'expertrec/general/expertrec_feed_pushed_pages';
 
-      const BUILD_NO = "1494410700";
-      const EXPERTREC_VERSION = "1.2.14";
+      const BUILD_NO = "1494484439";
+      const EXPERTREC_VERSION = "1.2.15";
       private $_password;
       private $_storeId = array();
 
@@ -1084,7 +1084,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
             ->setPrepareRequestStatus(false)
             ->setUserId('expertrec')
             ->setUrl($finalurl)
-            ->setMethod(Zend_Http_Client::GET)
+            ->setMethod(Zend_Http_Client::POST)
             ->setData($categoryArray)
             ->setHeader("Content-Type",'application/json')
             ->setPrepareRequestStatus(true)
@@ -1234,10 +1234,7 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
           // collect currencies
           $this->getCurrency($finalUrl,$debug);
 
-          $this->printLog('getFeedData : Calling get all-categories ','',$debug);
-
-          // collect all catagories
-          $this->getCategories($finalUrl,$debug);
+          
         }
 
         $filter = Mage::getSingleton('expertrec_recommendation/feed_feedfilter');
@@ -1397,6 +1394,11 @@ class Expertrec_Recommendation_ApiController extends Mage_Core_Controller_Front_
         // $logger->log("UserFeedPush_Track error: ".$e->getMessage());
         $this->printLog('getFeedData : Exception on sending completed info ',$e->getMessage(),$debug);
       }
+
+      $this->printLog('getFeedData : Calling get all-categories ','',$debug);
+
+      // collect all catagories
+      $this->getCategories($finalUrl,$debug);
       
       $this->printLog('getFeedData : Calling getPopularQuerries','',$debug);
 
