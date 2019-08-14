@@ -25,7 +25,14 @@ class Expertrec_Recommendation_Model_Validate {
       }
 
       public function getPassword(){
-          $storedPwd = base64_decode(Mage::getStoreConfig(self::CONFIG_SECRET));
+          $storedPwd = Mage::getSingleton('expertrec_recommendation/feed_feedconfig')->getSecret();
+              
+          if(empty($storedPwd)){
+              $storedPwd = base64_decode(Mage::getStoreConfig(self::CONFIG_SECRET));
+              Mage::getSingleton('expertrec_recommendation/feed_feedconfig')
+                    ->setSecret($storedPwd);
+          }
+
           return $storedPwd;
       }
 

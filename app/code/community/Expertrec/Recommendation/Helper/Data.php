@@ -196,6 +196,22 @@ class Expertrec_Recommendation_Helper_Data extends Mage_Core_Helper_Abstract {
         }
         return '';
     }
+	
+	/*
+	Fetching number of products per store, per website
+    */
+    public function getProductCount($wid,$sid)
+    {
+         $productcount = 0;
+
+         $collection = Mage::getResourceModel('catalog/product_collection');
+         $collection->addStoreFilter($sid);
+         $collection->addWebsiteFilter($wid);
+        // Retrieve product count in collection
+        $productcount = $collection->getSize();
+
+        return $productcount;
+    }
 
     public function pushFeed($filepath){
         try{
@@ -235,20 +251,6 @@ class Expertrec_Recommendation_Helper_Data extends Mage_Core_Helper_Abstract {
         return true;
     }
 
-    /*
-    Fetching number of products per store, per website
-    */
-    public function getProductCount($wid,$sid)
-    {
-         $productcount = 0;
 
-         $collection = Mage::getResourceModel('catalog/product_collection');
-         $collection->addStoreFilter($sid);
-         $collection->addWebsiteFilter($wid);
-        // Retrieve product count in collection
-        $productcount = $collection->getSize();
-
-        return $productcount;
-    }
 }  
 ?>

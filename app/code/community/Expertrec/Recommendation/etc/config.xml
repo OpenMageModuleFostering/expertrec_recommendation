@@ -2,20 +2,15 @@
 <config>
     <modules>
         <Expertrec_Recommendation>
-            <version>1.1.7</version>
+            <version>1.2.0</version>
         </Expertrec_Recommendation>
     </modules>
     <global>
         <models>
             <expertrec_recommendation>
                 <class>Expertrec_Recommendation_Model</class>
-            </expertrec_recommendation>            
-            <catalogsearch>
-                <rewrite>
-                    <layer>Expertrec_Recommendation_Model_Catalogsearch_Layer</layer>
-                </rewrite>
-            </catalogsearch>
-        </models>        
+            </expertrec_recommendation>
+        </models>
         <helpers>
             <expertrec_recommendation>
                 <class>Expertrec_Recommendation_Helper</class>
@@ -24,12 +19,7 @@
         <blocks>
             <expertrec_recommendation>
                 <class>Expertrec_Recommendation_Block</class>
-            </expertrec_recommendation> 
-            <catalog>
-                <rewrite>
-                    <product_list_toolbar>Expertrec_Recommendation_Block_Product_List_Toolbar</product_list_toolbar>
-                </rewrite>
-            </catalog>           
+            </expertrec_recommendation>
         </blocks>
         <resources>
             <expertrec_setup>
@@ -130,6 +120,17 @@
                     <frontName>expertrec</frontName>
                 </args>
             </expertrec>
-        </routers>        
+        </routers>
+        <events>
+            <controller_action_layout_load_before>
+                <observers>
+                    <expertrec_search>
+                        <type>singleton</type>
+                        <class>expertrec_recommendation/observer</class>
+                        <method>useExpertrecSearch</method>
+                    </expertrec_search>
+                </observers>
+            </controller_action_layout_load_before>
+        </events>
     </frontend>
 </config>

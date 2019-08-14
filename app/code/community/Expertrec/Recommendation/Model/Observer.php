@@ -313,6 +313,51 @@ class Expertrec_Recommendation_Model_Observer {
             Mage::getSingleton('expertrec_recommendation/log')->log("Error in getting feed endpoint: ".$e->getMessage());
             return '';
         }
-    }    
+    }
+
+    /**
+     * Load Expertrec Search.
+     */
+    public function useExpertrecSearch(Varien_Event_Observer $observer){
+        try {
+            $app = Mage::app();
+            $pageIdentifier = $app->getFrontController()->getAction()->getFullActionName();
+            
+            if ($pageIdentifier === 'catalogsearch_result_index' || 
+                $pageIdentifier === 'expertrec_result_index') 
+            {
+                $searchEnable = Mage::helper('expertrec_recommendation')->getConfig(self::SEARCH_LIST_ENABLE);
+                $customTemplate = Mage::helper('expertrec_recommendation')->getConfig(self::SEARCH_CUSTOM_TEMPLATE);
+
+                $requestParams = $app->getRequest()->getParams();
+                if( (isset($searchEnable) && $searchEnable == "true") || 
+                    (isset($requestParams["expertrec"]) && $requestParams["expertrec"] == "search")
+                ){
+                    if(isset($customTemplate) && $customTemplate == "true"){
+                        $observer->getLayout()
+                                ->getUpdate()
+                                ->addHandle('expertrec_custom_autocomplete');
+                    }else{
+                        $resultData = Mage::helper('expertrec_recommendation/autocompletehelper')->prepareLayer($requestParams);
+
+                        if(count($resultData) == 0 ){
+                            throw new Exception("Either Search_api or facets_list has not configured.");
+                        }
+                        
+                        Mage::register('expertrec_search_navigation', $resultData["facetHtml"]);
+                        Mage::register('expertrec_search_list', $resultData["listHtml"]);
+
+                        $observer->getLayout()
+                                ->getUpdate()
+                                ->addHandle('expertrec_autocomplete');
+                    }
+                }
+            }
+        }catch (Exception $e) {
+            Mage::getSingleton('expertrec_recommendation/log')->log('useExpertrecSearch exception: '.$e->getMessage());
+        }  
+        return $this;
+    }
+
 }
 ?>
